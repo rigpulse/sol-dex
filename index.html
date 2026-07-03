@@ -53,22 +53,24 @@
         .api-log-scroll{max-height:200px;overflow-y:auto}
         .detector-item{transition:all .2s}.detector-item:hover{background:rgba(255,255,255,.02)}
         
-        /* Grid Lebar untuk Tabel Anti Berantakan */
+        /* Grid Lebar untuk Tabel Anti Berantakan (DIJAMIN RAPI) */
         .table-grid {
             display: grid;
-            grid-template-columns: 30px 32px 180px 80px 60px 72px 55px 55px 48px 68px 55px 55px 55px 55px 55px;
-            gap: 6px;
+            /* Kolom: # | Icon | Token Info | Price | 30m | Signal | RSI | MACD | Vol | Risk | Entry | TP1 | TP2 | TP3 | SL */
+            grid-template-columns: 24px 28px 160px 85px 55px 75px 40px 50px 40px 65px 70px 70px 70px 70px 70px;
+            gap: 8px;
             align-items: center;
-            min-width: 1050px; /* Force minimum width to prevent overlap */
+            min-width: 1150px; /* Diberi ruang sangat lega */
         }
-        .ca-btn { transition: all 0.2s; }
-        .ca-btn:hover { color: #00e87b; transform: scale(1.1); }
-        .link-icon { transition: all 0.2s; color: #6b7280; }
+        .ca-btn { transition: all 0.2s; cursor: pointer; }
+        .ca-btn:hover { color: #00e87b; }
+        .link-icon { transition: all 0.2s; color: #6b7280; cursor: pointer; }
         .link-icon:hover { color: #e8eaed; transform: scale(1.1); }
     </style>
 </head>
 <body class="bg-grid min-h-screen flex flex-col">
 
+    <!-- Efek Scanline & Toast Container -->
     <div style="position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden;opacity:.03">
         <div style="width:100%;height:2px;background:linear-gradient(90deg,transparent,#00e87b,transparent);animation:scanline 8s linear infinite"></div>
     </div>
@@ -154,7 +156,7 @@
         </div>
     </div>
 
-    <!-- Main -->
+    <!-- Main Content -->
     <div class="max-w-[1920px] mx-auto px-4 pb-6 flex-1 flex flex-col min-h-0">
         <div class="flex gap-4" style="height:calc(100vh - 180px)">
             
@@ -180,7 +182,7 @@
                         <span>#</span><span></span><span>Token Info & Links</span><span>Price</span><span>30m</span><span>Signal</span><span>RSI</span><span>MACD</span><span>Vol</span><span>Risk</span><span>Entry</span><span>TP1</span><span>TP2</span><span>TP3</span><span>SL</span>
                     </div>
                     <!-- Table Body -->
-                    <div class="flex-1 overflow-y-auto" id="tokenTable"></div>
+                    <div class="flex-1 overflow-y-auto pb-4" id="tokenTable"></div>
                 </div>
             </div>
 
@@ -256,44 +258,42 @@
     ];
 
     // =============================================
-    // ROBUST API CALLER DENGAN PROXY FALLBACK
+    // ROBUST API CALLER (Direct -> Proxy Fallback)
     // =============================================
     async function api(method, ep, body=null){
         apiCnt++;
         if(document.getElementById('sApi')) document.getElementById('sApi').textContent=apiCnt;
         
+        const directUrl = `${CFG.baseUrl}${ep}`;
         const headers = {'Authorization':`Bearer ${CFG.apiKey}`,'Content-Type':'application/json','X-Dry-Run':'true'};
         const reqOpts = { method, headers };
         if(body) reqOpts.body = JSON.stringify(body);
         
-        const directUrl = `${CFG.baseUrl}${ep}`;
-        // Bypass proxy (corsproxy.io is reliable and forwards auth headers most times)
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
-        
+        // 1. Coba koneksi langsung (Jika backend CORS sudah fix)
         try {
-            // Coba koneksi langsung ke 9Router
-            const c = new AbortController(); const t = setTimeout(() => c.abort(), 8000);
+            const c = new AbortController(); const t = setTimeout(() => c.abort(), 5000);
             const res = await fetch(directUrl, { ...reqOpts, signal: c.signal });
             clearTimeout(t);
-            if(!res.ok) throw new Error(`HTTP ${res.status}`);
-            return await res.json();
+            if(res.ok) return await res.json();
         } catch(e) {
-            // Jika gagal (biasanya diblokir CORS browser), coba pakai proxy secara diam-diam!
-            try {
-                const c2 = new AbortController(); const t2 = setTimeout(() => c2.abort(), 8000);
-                const res2 = await fetch(proxyUrl, { ...reqOpts, signal: c2.signal });
-                clearTimeout(t2);
-                if(!res2.ok) throw new Error(`HTTP ${res2.status}`);
-                return await res2.json();
-            } catch (e2) {
-                // Sengaja tidak console.error agar tidak spam merah di log saat mode fallback (simulasi)
-                return null;
-            }
+            // Gagal direct (biasanya karena CORS), lanjut ke proxy
         }
+
+        // 2. Fallback via corsproxy.io
+        try {
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
+            const c2 = new AbortController(); const t2 = setTimeout(() => c2.abort(), 8000);
+            const res2 = await fetch(proxyUrl, { ...reqOpts, signal: c2.signal });
+            clearTimeout(t2);
+            if(res2.ok) return await res2.json();
+        } catch (e2) {
+            // Gagal di proxy juga, fallback diam-diam ke simulasi lokal (return null)
+        }
+        return null;
     }
 
     // =============================================
-    // TEST API MODAL (FIX ALL - NO CRASH)
+    // TEST API MODAL (Anti Error - Multi Check)
     // =============================================
     async function testApi(){
         const log=document.getElementById('apiTestLog'),res=document.getElementById('apiTestResult'),btn=document.getElementById('btnTest');
@@ -323,17 +323,17 @@
             let isOk = false;
             let errMsg = '';
             
-            // Tes Koneksi Langsung
+            // Tes 1: Direct
             try {
                 const r = await fetch(`${CFG.baseUrl}${ep}`, reqOpts);
                 if(r.ok) { isOk = true; } else { errMsg = `HTTP ${r.status}`; }
             } catch(e) {
-                // Tes Koneksi lewat Proxy jika langsung gagal karena CORS
+                // Tes 2: Proxy Fallback
                 try {
                     const r2 = await fetch(`https://corsproxy.io/?${encodeURIComponent(CFG.baseUrl+ep)}`, reqOpts);
                     if(r2.ok) { 
                         isOk = true; 
-                        errMsg = '(Bypassed via Proxy)'; // Berhasil di-bypass
+                        errMsg = '(Bypassed via Proxy)';
                     } else { 
                         errMsg = `Proxy HTTP ${r2.status}`; 
                     }
@@ -342,14 +342,12 @@
                 }
             }
             
-            // Generate result string
             let iconClass = isOk ? 'fa-check' : 'fa-xmark';
             let colorClass = isOk ? 'text-accent' : 'text-danger';
             let statusText = isOk ? `OK ${errMsg}` : `FAIL (${errMsg})`;
             
             const resultStr = `<div class="text-[11px] font-mono py-1 px-2 border-b border-border/30 ${colorClass}"><i class="fa-solid ${iconClass} mr-1" style="font-size:9px"></i>${m} ${ep} — ${statusText}</div>`;
             
-            // FIX: Menggunakan replace() asli bawaan JS yang aman
             html = html.replace(loadingStr, resultStr);
             log.innerHTML = html;
         }
@@ -369,7 +367,43 @@
     }
 
     // =============================================
-    // ENGINE ANALISIS TEKNIKAL 30 MENIT
+    // FORMATTERS (Smart Trimming Harga Anti Overlap)
+    // =============================================
+    function fmtP(p) {
+        if (!p || isNaN(p)) return '$0';
+        if (p >= 1000) return '$' + p.toFixed(1);
+        if (p >= 1) return '$' + p.toFixed(2);
+        if (p >= 0.01) return '$' + p.toFixed(4);
+        if (p >= 0.0001) return '$' + p.toFixed(5);
+        // Membatasi angka super kecil maksimal 7 desimal
+        return '$' + p.toFixed(7); 
+    }
+    
+    function fmtN(n){if(!n||isNaN(n))return'0';if(n>=1e9)return(n/1e9).toFixed(2)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return n.toFixed(0)}
+    function sigLbl(s){return{STRONG_BUY:'STRONG BUY',BUY:'BUY',HOLD:'HOLD',SELL:'SELL',STRONG_SELL:'STRONG SELL'}[s]||s}
+    function sigCls(s){return s.includes('BUY')?'signal-buy':s.includes('SELL')?'signal-sell':'signal-hold'}
+    function sigClr(s){return{STRONG_BUY:'#00e87b',BUY:'#00c968',STRONG_SELL:'#ff2d55',SELL:'#e0264b',HOLD:'#6b7280'}[s]||'#6b7280'}
+    function rskClr(s){return s>=70?'#00e87b':s>=40?'#f0b90b':'#ff2d55'}
+
+    // Helpers UI
+    function copyCA(event, caText) {
+        event.stopPropagation();
+        const ta = document.createElement('textarea');
+        ta.value = caText;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); toast('CA tersalin: ' + caText.substring(0,6) + '...', 'success'); } 
+        catch (err) { toast('Gagal menyalin CA', 'error'); }
+        document.body.removeChild(ta);
+    }
+    
+    function openExternal(event, url) {
+        event.stopPropagation();
+        window.open(url, '_blank');
+    }
+
+    // =============================================
+    // TEKNIKAL & SECURITY ENGINE
     // =============================================
     function genOHLCV(bp,vol,n){
         const c=[];let p=bp;
@@ -513,34 +547,6 @@
         return{signal:sig,strength:str,reasons,rsi:r,macd:m,ema9:e9[n],ema21:e21[n],bb,vwap:vw,volRatio:vr};
     }
 
-    function fmtP(p){if(!p||isNaN(p))return'$0';if(p>=1)return'$'+p.toFixed(4);if(p>=0.001)return'$'+p.toFixed(6);return'$'+p.toFixed(10)}
-    function fmtN(n){if(!n||isNaN(n))return'0';if(n>=1e9)return(n/1e9).toFixed(2)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return n.toFixed(0)}
-    function sigLbl(s){return{STRONG_BUY:'STRONG BUY',BUY:'BUY',HOLD:'HOLD',SELL:'SELL',STRONG_SELL:'STRONG SELL'}[s]||s}
-    function sigCls(s){return s.includes('BUY')?'signal-buy':s.includes('SELL')?'signal-sell':'signal-hold'}
-    function sigClr(s){return{STRONG_BUY:'#00e87b',BUY:'#00c968',STRONG_SELL:'#ff2d55',SELL:'#e0264b',HOLD:'#6b7280'}[s]||'#6b7280'}
-    function rskClr(s){return s>=70?'#00e87b':s>=40?'#f0b90b':'#ff2d55'}
-
-    // Copy to clipboard helper
-    function copyCA(event, caText) {
-        event.stopPropagation(); // Biar tidak select token saat click copy
-        const ta = document.createElement('textarea');
-        ta.value = caText;
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-            document.execCommand('copy');
-            toast('CA tersalin: ' + caText.substring(0,6) + '...', 'success');
-        } catch (err) {
-            toast('Gagal menyalin CA', 'error');
-        }
-        document.body.removeChild(ta);
-    }
-    
-    function openExternal(event, url) {
-        event.stopPropagation();
-        window.open(url, '_blank');
-    }
-
     let tokens=[],selToken=null;
     function initData(){
         const bp=[0.000025,2.45,0.0089,0.0042,1.23,0.18,0.0000003,0.45,0.089,0.72,0.023,0.0012,0.0067,0.00045,0.0000015,0.000089,0.0000034,0.00000012,0.0000078,0.000056,0.000023,0.000015,0.000034,0.0045,0.000067,0.0000012,0.00000089,0.000023,0.00045,0.0012,0.00078,0.0000056,0.00034,0.000012,0.000089,0.0000023,0.00067,0.000045,0.0000018,0.00023,0.000056,0.0000034,0.00012,0.000078,0.0000045,0.00089,0.0034,0.000023,0.000056];
@@ -557,7 +563,7 @@
     }
 
     // =============================================
-    // RENDER TABLE (TINGKAT DEWA - FIX LAYOUT)
+    // RENDER TABLE (Layout Grid Lebar & Truncate Teks)
     // =============================================
     function renderTable(){
         const ct=document.getElementById('tokenTable');
@@ -582,8 +588,8 @@
                 <span class="text-[9px] font-mono text-muted text-center">${i+1}</span>
                 <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold mx-auto" style="background:${sigClr(t.signal)}22;color:${sigClr(t.signal)}">${t.s[0]}</div>
                 
-                <!-- Expanded Token Info Column (Nama, Ticker, Buttons) -->
-                <div class="min-w-0 flex flex-col justify-center">
+                <!-- Expanded Token Info Column -->
+                <div class="min-w-0 flex flex-col justify-center truncate">
                     <div class="flex items-center gap-1.5">
                         <span class="text-[11px] font-bold truncate">${t.s}${t.security.honeypot?' <i class="fa-solid fa-skull text-danger text-[9px]"></i>':''}</span>
                         <span class="text-[9px] text-txtsec truncate" title="${t.n}">${t.n}</span>
@@ -597,21 +603,22 @@
                     </div>
                 </div>
 
-                <span class="text-[10px] font-mono font-semibold">${fmtP(t.price)}</span>
-                <span class="text-[9px] font-mono font-semibold ${up?'text-accent':'text-danger'}">${up?'+':''}${t.change30m.toFixed(1)}%</span>
-                <div class="${sigCls(t.signal)} rounded px-1 py-0.5 text-center"><span class="text-[8px] font-bold" style="color:${sigClr(t.signal)}">${sigLbl(t.signal)}</span></div>
-                <span class="text-[9px] font-mono ${t.rsi<30?'text-accent':t.rsi>70?'text-danger':''}">${t.rsi.toFixed(0)}</span>
-                <span class="text-[8px] font-mono ${t.macdData.h>0?'text-accent':'text-danger'}">${t.macdData.h>0?'+':''}${(t.macdData.h*1e6).toFixed(0)}u</span>
-                <span class="text-[8px] font-mono ${t.volRatio>1.5?'text-warn':'text-muted'}">${t.volRatio>1.5?'HI':'LO'}</span>
-                <div>
+                <span class="text-[10px] font-mono font-semibold truncate" title="${t.price}">${fmtP(t.price)}</span>
+                <span class="text-[9px] font-mono font-semibold truncate ${up?'text-accent':'text-danger'}">${up?'+':''}${t.change30m.toFixed(1)}%</span>
+                <div class="${sigCls(t.signal)} rounded px-1 py-0.5 text-center truncate"><span class="text-[8px] font-bold" style="color:${sigClr(t.signal)}">${sigLbl(t.signal)}</span></div>
+                <span class="text-[9px] font-mono truncate ${t.rsi<30?'text-accent':t.rsi>70?'text-danger':''}">${t.rsi.toFixed(0)}</span>
+                <span class="text-[8px] font-mono truncate ${t.macdData.h>0?'text-accent':'text-danger'}">${t.macdData.h>0?'+':''}${(t.macdData.h*1e6).toFixed(0)}u</span>
+                <span class="text-[8px] font-mono truncate ${t.volRatio>1.5?'text-warn':'text-muted'}">${t.volRatio>1.5?'HI':'LO'}</span>
+                <div class="truncate">
                     <div class="flex items-center justify-between mb-0.5"><span class="text-[8px] font-mono" style="color:${rskClr(t.security.score)}">${t.security.score}</span></div>
                     <div class="risk-bar"><div class="risk-fill" style="width:${t.security.score}%;background:${rskClr(t.security.score)}"></div></div>
                 </div>
-                <span class="text-[9px] font-mono text-accent">${fmtP(tl.entry)}</span>
-                <span class="text-[9px] font-mono text-accent">${fmtP(tl.tp1)}</span>
-                <span class="text-[9px] font-mono text-warn">${fmtP(tl.tp2)}</span>
-                <span class="text-[9px] font-mono" style="color:#6366f1">${fmtP(tl.tp3)}</span>
-                <span class="text-[9px] font-mono text-danger">${fmtP(tl.sl)}</span>
+                <!-- Harga Level dengan Truncate & Formatting Terpotong Cerdas -->
+                <span class="text-[10px] font-mono text-accent truncate" title="${tl.entry}">${fmtP(tl.entry)}</span>
+                <span class="text-[10px] font-mono text-accent truncate" title="${tl.tp1}">${fmtP(tl.tp1)}</span>
+                <span class="text-[10px] font-mono text-warn truncate" title="${tl.tp2}">${fmtP(tl.tp2)}</span>
+                <span class="text-[10px] font-mono truncate" style="color:#6366f1" title="${tl.tp3}">${fmtP(tl.tp3)}</span>
+                <span class="text-[10px] font-mono text-danger truncate" title="${tl.sl}">${fmtP(tl.sl)}</span>
             </div>`;
         });
         ct.innerHTML=h;
@@ -653,7 +660,7 @@
 
         document.getElementById('detailContent').innerHTML=`
         <div class="slide-in">
-            <!-- Header Tingkat Dewa -->
+            <!-- Header Panel -->
             <div class="p-4 border-b border-border relative">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold" style="background:${sigClr(t.signal)}22;color:${sigClr(t.signal)}">${t.s.slice(0,2)}</div>
@@ -784,7 +791,7 @@
         const from=side==='buy'?SOL:selToken.m,to=side==='buy'?selToken.m:SOL;
         const inp=side==='buy'?solAmt:(amt/selToken.price).toFixed(0);
 
-        // Gunakan API Proxy-Ready
+        // API Call via Proxy-Ready
         const quote = await api('POST','/swap/quote',{from_token:from,to_token:to,amount:inp,slippage:CFG.slippage,network:'solana',dry_run:true});
 
         dryCnt++;document.getElementById('sDry').textContent=dryCnt;
@@ -818,8 +825,8 @@
                 </div>
             </div>
 
-            ${hasQ?`<div class="bg-accent/5 border border-accent/20 rounded-lg p-3"><div class="text-[10px] text-accent font-bold"><i class="fa-solid fa-check-circle mr-1"></i>Quote diterima dari API (atau Proxy)</div></div>`
-            :`<div class="bg-warn/5 border border-warn/20 rounded-lg p-3 text-[10px] text-warn"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Menggunakan estimasi lokal (API gagal/diblokir)</div>`}
+            ${hasQ?`<div class="bg-accent/5 border border-accent/20 rounded-lg p-3"><div class="text-[10px] text-accent font-bold"><i class="fa-solid fa-check-circle mr-1"></i>Quote diterima dari API 9Router</div></div>`
+            :`<div class="bg-warn/5 border border-warn/20 rounded-lg p-3 text-[10px] text-warn"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Menggunakan estimasi lokal (API gagal dijangkau)</div>`}
 
             <button onclick="document.getElementById('dryRunModal').style.display='none'" class="w-full py-2.5 rounded-lg bg-card border border-border text-sm font-bold hover:border-accent/50">Tutup Simulasi</button>
         </div>`;
@@ -827,8 +834,10 @@
     }
 
     async function fetchAPI(){
-        const list=await api('GET','/tokens?chain=solana&type=memecoin&limit=50');
-        if(list&&Array.isArray(list)&&list.length>0){
+        // Diperbarui agar path api lebih universal dan less error (menghindari 404 dari type=memecoin jika tak ada di backend)
+        const list = await api('GET','/tokens?chain=solana&limit=50');
+        
+        if(list && Array.isArray(list) && list.length>0){
             document.getElementById('srcBadge').style.cssText='background:rgba(0,232,123,.1);color:#00e87b;border:1px solid rgba(0,232,123,.2)';
             document.getElementById('srcBadge').textContent='API LIVE';
             document.getElementById('apiStatus').innerHTML='<div class="w-2 h-2 rounded-full bg-accent pulse-dot"></div><span class="text-[11px] font-mono text-accent">ONLINE</span>';
@@ -837,9 +846,8 @@
             document.getElementById('apiStatus').innerHTML='<div class="w-2 h-2 rounded-full bg-warn pulse-dot"></div><span class="text-[11px] font-mono text-warn">FALLBACK</span>';
         }
         
-        // Sengaja hapus error handle di sini agar fallback berjalan diam-diam tanpa alert / console error.
         if(CFG.wallet){
-            const b=await api('GET',`/wallet/${CFG.wallet}/balance?network=solana`);
+            const b = await api('GET',`/wallet/${CFG.wallet}/balance?network=solana`);
             if(b)document.getElementById('solBal').textContent=parseFloat(b.solana?.sol||b.SOL||b.balance||0).toFixed(4)+' SOL';
         }
     }
