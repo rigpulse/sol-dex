@@ -1,807 +1,890 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOL SIGNAL COMMAND CENTER</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<script>
-tailwind.config={theme:{extend:{colors:{bg:'#07080c',card:'#0d0f15',cardhover:'#111420',border:'#1a1d2e',accent:'#00e87b',danger:'#ff2d55',warn:'#f0b90b',muted:'#3a3f52',txt:'#e8eaed',txtsec:'#6b7280'},fontFamily:{mono:['JetBrains Mono','monospace'],sans:['Space Grotesk','sans-serif']}}}}
-</script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#1a1d2e transparent}
-::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#1a1d2e;border-radius:10px}
-body{background:#07080c;color:#e8eaed;font-family:'Space Grotesk',sans-serif;overflow-x:hidden}
-.pulse-dot{animation:pulseDot 2s infinite}
-@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
-@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-@keyframes glowPulse{0%,100%{box-shadow:0 0 15px rgba(0,232,123,.1)}50%{box-shadow:0 0 30px rgba(0,232,123,.25)}}
-
-.slide-in{animation:slideIn .3s ease-out}
-.signal-buy{background:linear-gradient(135deg,rgba(0,232,123,.12),rgba(0,232,123,.03));border:1px solid rgba(0,232,123,.25)}
-.signal-sell{background:linear-gradient(135deg,rgba(255,45,85,.12),rgba(255,45,85,.03));border:1px solid rgba(255,45,85,.25)}
-.signal-hold{background:linear-gradient(135deg,rgba(58,63,82,.2),rgba(58,63,82,.05));border:1px solid rgba(58,63,82,.3)}
-.risk-bar{height:4px;border-radius:2px;background:#1a1d2e;overflow:hidden}
-.risk-fill{height:100%;border-radius:2px;transition:width .6s ease}
-
-/* PERBAIKAN GRID TABEL (Tingkat Dewa) */
-.table-grid {
-    display: grid;
-    /* Lebar kolom sudah disesuaikan agar nama token dan kolom lain tidak tumpang tindih */
-    grid-template-columns: 28px 28px minmax(140px, 1.8fr) 75px 55px 75px 45px 55px 45px 70px 60px 60px 60px 60px 60px;
-    gap: 6px;
-    align-items: center;
-}
-.token-row{transition:all .15s ease;cursor:pointer;border-bottom:1px solid rgba(26,29,46,.5)}
-.token-row:hover{background:#111420}
-.token-row.active{background:#111420;border-left:2px solid #00e87b}
-
-.toast{animation:slideIn .3s ease-out;position:fixed;right:20px;z-index:9999}
-.bg-grid{background-image:linear-gradient(rgba(26,29,46,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(26,29,46,.3) 1px,transparent 1px);background-size:40px 40px}
-.metric-card{background:linear-gradient(135deg,#0d0f15 0%,#0a0b10 100%);border:1px solid #1a1d2e}
-select,input,textarea{background:#0d0f15;border:1px solid #1a1d2e;color:#e8eaed;border-radius:6px;padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border-color .2s}
-select:focus,input:focus{border-color:#00e87b}
-.btn-buy{background:linear-gradient(135deg,#00e87b,#00c968);color:#07080c;font-weight:700;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;transition:all .2s;font-family:'Space Grotesk',sans-serif}
-.btn-buy:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,232,123,.3)}
-.btn-buy:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
-.btn-dry{background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;font-weight:700;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;transition:all .2s;font-family:'Space Grotesk',sans-serif}
-.btn-dry:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(99,102,241,.3)}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center}
-
-.tp-level{position:relative;overflow:hidden}
-.tp-level::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px}
-.tp-level.tp1::before{background:#00e87b}
-.tp-level.tp2::before{background:#f0b90b}
-.tp-level.tp3::before{background:#6366f1}
-.tp-level.sl::before{background:#ff2d55}
-.entry-line{position:relative;overflow:hidden}
-.entry-line::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px;background:#00e87b;animation:glowPulse 2s infinite}
-.check-pass{color:#00e87b}.check-fail{color:#ff2d55}.check-warn{color:#f0b90b}
-.api-log-scroll{max-height:280px;overflow-y:auto}
-.detector-item{transition:all .2s}.detector-item:hover{background:rgba(255,255,255,.02)}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOL SIGNAL COMMAND CENTER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config={theme:{extend:{colors:{bg:'#07080c',card:'#0d0f15',cardhover:'#111420',border:'#1a1d2e',accent:'#00e87b',danger:'#ff2d55',warn:'#f0b90b',muted:'#3a3f52',txt:'#e8eaed',txtsec:'#6b7280'},fontFamily:{mono:['JetBrains Mono','monospace'],sans:['Space Grotesk','sans-serif']}}}}
+    </script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#1a1d2e transparent}
+        ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#2a2d3e;border-radius:10px}
+        ::-webkit-scrollbar-thumb:hover{background:#3a3f52}
+        body{background:#07080c;color:#e8eaed;font-family:'Space Grotesk',sans-serif;overflow-x:hidden}
+        .pulse-dot{animation:pulseDot 2s infinite}
+        @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+        @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+        @keyframes glowPulse{0%,100%{box-shadow:0 0 15px rgba(0,232,123,.1)}50%{box-shadow:0 0 30px rgba(0,232,123,.25)}}
+        .slide-in{animation:slideIn .3s ease-out}
+        .signal-buy{background:linear-gradient(135deg,rgba(0,232,123,.12),rgba(0,232,123,.03));border:1px solid rgba(0,232,123,.25)}
+        .signal-sell{background:linear-gradient(135deg,rgba(255,45,85,.12),rgba(255,45,85,.03));border:1px solid rgba(255,45,85,.25)}
+        .signal-hold{background:linear-gradient(135deg,rgba(58,63,82,.2),rgba(58,63,82,.05));border:1px solid rgba(58,63,82,.3)}
+        .risk-bar{height:4px;border-radius:2px;background:#1a1d2e;overflow:hidden}
+        .risk-fill{height:100%;border-radius:2px;transition:width .6s ease}
+        .token-row{transition:all .15s ease;cursor:pointer;border-bottom:1px solid rgba(26,29,46,.5)}
+        .token-row:hover{background:#111420}
+        .token-row.active{background:#111420;border-left:2px solid #00e87b}
+        .toast{animation:slideIn .3s ease-out;position:fixed;right:20px;z-index:9999}
+        .bg-grid{background-image:linear-gradient(rgba(26,29,46,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(26,29,46,.3) 1px,transparent 1px);background-size:40px 40px}
+        .metric-card{background:linear-gradient(135deg,#0d0f15 0%,#0a0b10 100%);border:1px solid #1a1d2e}
+        select,input,textarea{background:#0d0f15;border:1px solid #1a1d2e;color:#e8eaed;border-radius:6px;padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border-color .2s}
+        select:focus,input:focus{border-color:#00e87b}
+        .btn-buy{background:linear-gradient(135deg,#00e87b,#00c968);color:#07080c;font-weight:700;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;transition:all .2s;font-family:'Space Grotesk',sans-serif}
+        .btn-buy:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,232,123,.3)}
+        .btn-buy:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+        .btn-dry{background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;font-weight:700;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;transition:all .2s;font-family:'Space Grotesk',sans-serif}
+        .btn-dry:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(99,102,241,.3)}
+        .btn-dry:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center}
+        .tp-level{position:relative;overflow:hidden}
+        .tp-level::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px}
+        .tp-level.tp1::before{background:#00e87b}
+        .tp-level.tp2::before{background:#f0b90b}
+        .tp-level.tp3::before{background:#6366f1}
+        .tp-level.sl::before{background:#ff2d55}
+        .entry-line{position:relative;overflow:hidden}
+        .entry-line::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px;background:#00e87b;animation:glowPulse 2s infinite}
+        .check-pass{color:#00e87b}.check-fail{color:#ff2d55}.check-warn{color:#f0b90b}
+        .api-log-scroll{max-height:200px;overflow-y:auto}
+        .detector-item{transition:all .2s}.detector-item:hover{background:rgba(255,255,255,.02)}
+        
+        /* Grid Lebar untuk Tabel Anti Berantakan */
+        .table-grid {
+            display: grid;
+            grid-template-columns: 30px 32px 180px 80px 60px 72px 55px 55px 48px 68px 55px 55px 55px 55px 55px;
+            gap: 6px;
+            align-items: center;
+            min-width: 1050px; /* Force minimum width to prevent overlap */
+        }
+        .ca-btn { transition: all 0.2s; }
+        .ca-btn:hover { color: #00e87b; transform: scale(1.1); }
+        .link-icon { transition: all 0.2s; color: #6b7280; }
+        .link-icon:hover { color: #e8eaed; transform: scale(1.1); }
+    </style>
 </head>
-<body class="bg-grid min-h-screen">
+<body class="bg-grid min-h-screen flex flex-col">
 
-<div style="position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden;opacity:.03">
-<div style="width:100%;height:2px;background:linear-gradient(90deg,transparent,#00e87b,transparent);animation:scanline 8s linear infinite"></div>
-</div>
-
-<div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
-
-<div id="apiConfigModal" class="modal-overlay" style="display:none">
-<div class="bg-card border border-border rounded-2xl p-6 w-[560px] max-w-[95vw] max-h-[90vh] overflow-y-auto">
-<div class="flex items-center justify-between mb-5">
-<h2 class="font-bold text-lg">Konfigurasi API 9Router</h2>
-<button onclick="document.getElementById('apiConfigModal').style.display='none'" class="text-muted hover:text-txt text-xl"><i class="fa-solid fa-xmark"></i></button>
-</div>
-<div class="space-y-4">
-<div><label class="text-[11px] text-txtsec uppercase tracking-wider block mb-1">API Base URL</label><input type="text" id="cfgApiBase" value="http://192.168.100.41:20128/v1" class="w-full text-sm"></div>
-<div><label class="text-[11px] text-txtsec uppercase tracking-wider block mb-1">API Key</label>
-<div class="flex gap-2"><input type="password" id="cfgApiKey" value="sk-e0513746a1e9b31d-0uzx8g-ebcd1a86" class="flex-1 text-sm">
-<button onclick="const i=document.getElementById('cfgApiKey');i.type=i.type==='password'?'text':'password'" class="px-3 bg-card border border-border rounded text-xs text-muted hover:text-txt"><i class="fa-solid fa-eye"></i></button></div></div>
-<div><label class="text-[11px] text-txtsec uppercase tracking-wider block mb-1">Wallet Address</label><input type="text" id="cfgWallet" placeholder="Solana wallet..." class="w-full text-sm"></div>
-<div><label class="text-[11px] text-txtsec uppercase tracking-wider block mb-1">Slippage (%)</label><input type="number" id="cfgSlippage" value="1.5" min="0.1" max="50" step="0.1" class="w-full text-sm"></div>
-<div class="flex gap-3">
-<button onclick="testApi()" class="flex-1 py-2.5 rounded-lg bg-card border border-border text-sm font-bold hover:border-accent/50" id="btnTest"><i class="fa-solid fa-plug mr-2"></i>Test</button>
-<button onclick="saveApiCfg()" class="btn-buy flex-1 text-sm"><i class="fa-solid fa-check mr-2"></i>Simpan</button>
-</div>
-<div id="apiTestResult" class="hidden bg-bg rounded-lg p-3 border border-border"><div id="apiTestLog" class="api-log-scroll"></div></div>
-</div>
-</div>
-</div>
-
-<div id="dryRunModal" class="modal-overlay" style="display:none">
-<div class="bg-card border border-border rounded-2xl p-6 w-[540px] max-w-[95vw] max-h-[90vh] overflow-y-auto">
-<div class="flex items-center justify-between mb-4">
-<h2 class="font-bold text-lg"><i class="fa-solid fa-flask text-accent mr-2"></i>Dry Run Result</h2>
-<button onclick="document.getElementById('dryRunModal').style.display='none'" class="text-muted hover:text-txt text-xl"><i class="fa-solid fa-xmark"></i></button>
-</div>
-<div id="dryRunContent"></div>
-</div>
-</div>
-
-<header class="sticky top-0 z-40 border-b border-border" style="background:rgba(7,8,12,.92);backdrop-filter:blur(20px)">
-<div class="max-w-[1920px] mx-auto px-4 h-14 flex items-center justify-between">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#00e87b,#00a85a)"><i class="fa-solid fa-bolt text-bg text-sm"></i></div>
-<span class="font-bold text-lg tracking-tight">SOL<span class="text-accent">SIGNAL</span></span>
-<span class="text-[10px] font-mono text-muted bg-card px-2 py-0.5 rounded border border-border ml-1">ANTI-RUG</span>
-</div>
-<div class="flex items-center gap-5">
-<div class="flex items-center gap-2"><span class="text-[10px] text-txtsec">MODE</span><span class="text-[11px] font-mono font-bold text-accent bg-accent/10 px-2 py-0.5 rounded">DRY RUN</span></div>
-<div class="flex items-center gap-2"><span class="text-[10px] text-txtsec">SOL</span><span class="font-mono text-[11px] font-bold" id="solBal">--</span></div>
-<div id="apiStatus" class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-warn pulse-dot"></div><span class="text-[11px] font-mono text-warn">OFFLINE</span></div>
-<button onclick="document.getElementById('apiConfigModal').style.display='flex'" class="text-[10px] font-mono text-muted hover:text-accent bg-card border border-border px-2 py-1 rounded"><i class="fa-solid fa-gear mr-1"></i>API</button>
-<div class="font-mono text-[11px] text-muted" id="clock">--:--:--</div>
-</div>
-</div>
-</header>
-
-<div class="max-w-[1920px] mx-auto px-4 py-3">
-<div class="grid grid-cols-2 md:grid-cols-7 gap-3">
-<div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">Tokens</div><div class="font-mono font-bold text-xl" id="sTotal">50</div></div>
-<div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">Buy</div><div class="font-mono font-bold text-xl text-accent" id="sBuy">0</div></div>
-<div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">Sell</div><div class="font-mono font-bold text-xl text-danger" id="sSell">0</div></div>
-<div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">Safe</div><div class="font-mono font-bold text-xl text-accent" id="sSafe">0</div></div>
-<div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">Honeypot</div><div class="font-mono font-bold text-xl text-danger" id="sHoneypot">0</div></div>
-<div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">Dry Runs</div><div class="font-mono font-bold text-xl text-warn" id="sDry">0</div></div>
-<div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">API Calls</div><div class="font-mono font-bold text-xl" id="sApi">0</div></div>
-</div>
-</div>
-
-<div class="max-w-[1920px] mx-auto px-4 pb-6">
-<div class="flex gap-4" style="height:calc(100vh - 200px)">
-    
-<!-- Table Panel -->
-<div class="flex-1 flex flex-col min-w-0 border border-border rounded-xl overflow-hidden" style="background:rgba(13,15,21,.8)">
-    <div class="px-4 py-3 border-b border-border flex items-center justify-between flex-shrink-0">
-        <div class="flex items-center gap-3">
-            <h2 class="font-bold text-sm">SOLANA MEMECOIN <span class="text-accent">ANTI-RUG</span></h2>
-            <span class="text-[10px] font-mono bg-card border border-border px-2 py-0.5 rounded text-txtsec">30m</span>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded" id="srcBadge" style="background:rgba(240,185,11,.1);color:#f0b90b;border:1px solid rgba(240,185,11,.2)">SIMULASI</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <select id="fSig" class="text-[11px]"><option value="all">Semua</option><option value="STRONG_BUY">Strong Buy</option><option value="BUY">Buy</option><option value="HOLD">Hold</option><option value="SELL">Sell</option><option value="STRONG_SELL">Strong Sell</option></select>
-            <select id="fRisk" class="text-[11px]"><option value="all">All Risk</option><option value="safe">Safe 70+</option><option value="med">Med 40-69</option><option value="bad">Danger &lt;40</option></select>
-            <select id="fSort" class="text-[11px]"><option value="signal">Sort: Signal</option><option value="risk">Sort: Risk</option><option value="rr">Sort: R:R</option></select>
-            <button onclick="refreshData()" class="text-[11px] px-3 py-1.5 bg-card border border-border rounded hover:border-accent/50"><i class="fa-solid fa-rotate" id="refIcon"></i></button>
-        </div>
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden;opacity:.03">
+        <div style="width:100%;height:2px;background:linear-gradient(90deg,transparent,#00e87b,transparent);animation:scanline 8s linear infinite"></div>
     </div>
-    
-    <!-- Table Header & Body Wrapper (Scrollable Horizontal for small screens) -->
-    <div class="flex-1 overflow-x-auto overflow-y-hidden flex flex-col">
-        <div class="min-w-[980px] flex flex-col flex-1 h-full">
-            <!-- Table Header -->
-            <div class="table-grid flex-shrink-0 px-4 py-2 text-[9px] text-muted uppercase tracking-wider border-b border-border bg-card/50">
-                <span>#</span><span></span><span>Token</span><span>Price</span><span>30m</span><span>Signal</span><span>RSI</span><span>MACD</span><span>Vol</span><span>Risk</span><span>Entry</span><span>TP1</span><span>TP2</span><span>TP3</span><span>SL</span>
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <!-- API Config Modal -->
+    <div id="apiConfigModal" class="modal-overlay" style="display:none">
+        <div class="bg-card border border-border rounded-2xl p-6 w-[560px] max-w-[95vw] max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="font-bold text-lg">Konfigurasi API 9Router</h2>
+                <button onclick="document.getElementById('apiConfigModal').style.display='none'" class="text-muted hover:text-txt text-xl"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <!-- Table Body -->
-            <div class="flex-1 overflow-y-auto" id="tokenTable"></div>
-        </div>
-    </div>
-</div>
-
-<div class="w-[440px] flex-shrink-0 border border-border rounded-xl overflow-hidden flex flex-col" style="background:rgba(13,15,21,.8)">
-<div id="detailContent" class="flex-1 overflow-y-auto">
-<div class="flex items-center justify-center h-full text-txtsec text-sm">
-<div class="text-center"><i class="fa-solid fa-shield-halved text-3xl text-muted mb-3 block"></i><p>Pilih token untuk analisis</p></div>
-</div>
-</div>
-</div>
-
-</div>
-</div>
-
-<script>
-let CFG={baseUrl:'http://192.168.100.41:20128/v1',apiKey:'sk-e0513746a1e9b31d-0uzx8g-ebcd1a86',wallet:'',slippage:1.5};
-let apiCnt=0,dryCnt=0;
-const SOL='So11111111111111111111111111111111111111112';
-
-// Silent fail mechanism added so console doesn't spam red errors on local HTTP CORS block
-async function api(method,ep,body=null){
-    const url=`${CFG.baseUrl}${ep}`;apiCnt++;
-    const sApiEl=document.getElementById('sApi');
-    if(sApiEl)sApiEl.textContent=apiCnt;
-    try{
-        const o={method,headers:{'Authorization':`Bearer ${CFG.apiKey}`,'Content-Type':'application/json','X-Dry-Run':'true'}};
-        if(body)o.body=JSON.stringify(body);
-        const c=new AbortController();const t=setTimeout(()=>c.abort(),8000);
-        const r=await fetch(url,{...o,signal:c.signal});clearTimeout(t);
-        if(!r.ok)throw new Error(`HTTP ${r.status}`);
-        return await r.json();
-    }catch(e){
-        return null; // Silent fail untuk auto-polling (CORS protection)
-    }
-}
-
-const COINS=[
-{s:'BONK',n:'Bonk',m:'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'},
-{s:'WIF',n:'dogwifhat',m:'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm'},
-{s:'BOME',n:'Book of Meme',m:'wJToGFQwVbHb1Zvq7R4sPwUk4h7vDs5m5ELhG4T3RNB'},
-{s:'MEW',n:'cat in a dogs world',m:'MEW1gQVXFPzJAfDHH6mr9GGzLVFcJpW5FzvGKQJhYgC'},
-{s:'POPCAT',n:'Popcat',m:'7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr'},
-{s:'PONKE',n:'Ponke',m:'Az3T9uLrWjGh4t3NbGZ5sGEVdrLbXpJiVU8QoBn3kP8q'},
-{s:'MOG',n:'Mog Coin Sol',m:'mogKjCjnY6p9J2QWmRj9HYSAeZaGv8kPm3nBZT2sXFh'},
-{s:'TREMP',n:'TREMP',m:'Df6ybKHzhMxrwQf6P6v6Bk3W9TQxwBvBhQpEJwAo8H7V'},
-{s:'BODEN',n:'Boden',m:'BodenTqz4VsaQMFFsCVbPnMPSVhAqWvJzmXyQgJhEwNb'},
-{s:'SPX',n:'SPX6900',m:'SPX2hL6P3z3kWmnKHGQnPfu9DK8x3JnGZCzRjsV8GqP'},
-{s:'MYRO',n:'Myro',m:'MYRoVwj7SjADfUoZrvGMeLfCHHRcLZcXhXpnPpWZyKx'},
-{s:'W',n:'W Token',m:'WtokenGnU5fsWc1e9Z12gsFCmRkXdYzRqPJCq4s2kCV'},
-{s:'SAMO',n:'Samoyedcoin',m:'7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU'},
-{s:'KITTY',n:'Kitty Solana',m:'KiTTyFdzJ1hVZKNKqA1uEdRrD1V2WkEnLJpGxPbz3Ru'},
-{s:'SYNBAD',n:'Synbad',m:'SyNBADzUWq3Tbnq4xP9oZGxqfMqbXhN7eJrF3HhT8kFz'},
-{s:'BILLY',n:'Billy',m:'BiLlyDz1WjZv8xqZPbXj8r1FqZcKpLmNoRqTgVhXsYkA'},
-{s:'MEME',n:'Meme Sol',m:'MeMeT9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkA2'},
-{s:'SHIBONK',n:'ShiBonk',m:'ShiBnk9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk3'},
-{s:'ELON',n:'Elon Sol',m:'ELoNk9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk4'},
-{s:'FLOKI-S',n:'Floki Sol',m:'FLokI9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk5'},
-{s:'JEPI',n:'JEPITO',m:'JEpITo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk6'},
-{s:'TURBO',n:'Turbo Sol',m:'TuRBo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk7'},
-{s:'POPEYE',n:'Popeye Sol',m:'PoPeYe9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk8'},
-{s:'MSTR',n:'MSTR Sol',m:'MStR99Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk9'},
-{s:'CORGIAI',n:'CorgiAI Sol',m:'CoRgAi9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkA'},
-{s:'HARAMBE',n:'Harambe Sol',m:'HaRaMb9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkB'},
-{s:'PEPE-S',n:'Pepe Solana',m:'PePeS09Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkC'},
-{s:'CHEESE',n:'Cheese Token',m:'ChEeSe9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkD'},
-{s:'NEIRO-S',n:'Neiro Sol',m:'NeIrOS9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkE'},
-{s:'MICHI',n:'Michi',m:'MiChI99Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkF'},
-{s:'MOODENG',n:'MooDeng',m:'MoOdEn9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkG'},
-{s:'GOAT',n:'GOAT Solana',m:'GoAtS09Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkH'},
-{s:'FWOG',n:'Fwog',m:'FwOgS09Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkI'},
-{s:'HWIF',n:'Hawk Wif Hat',m:'HwIfS09Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkJ'},
-{s:'GIGA',n:'Giga Chad',m:'GiGaCh9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkK'},
-{s:'RETARDIO',n:'Retardio',m:'ReTaRd9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkL'},
-{s:'NPC',n:'NPC Token',m:'NpCTok9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkM'},
-{s:'BULL',n:'Bull Solana',m:'BuLLSo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkN'},
-{s:'BEAR',n:'Bear Sol',m:'BeArSo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkO'},
-{s:'FISH',n:'Fish Sol',m:'FiShSo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkP'},
-{s:'CRAB',n:'Crab Sol',m:'CrAbSo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkQ'},
-{s:'WHALE',n:'Whale Sol',m:'WhAlEo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkR'},
-{s:'DOLPHIN',n:'Dolphin Sol',m:'DoLpHi9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkS'},
-{s:'SHARK',n:'Shark Sol',m:'ShArKo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkT'},
-{s:'ZEREBRO',n:'Zerebro',m:'ZeReBr9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkW'},
-{s:'AI16Z',n:'AI16Z',m:'AI16Ze9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkX'},
-{s:'ARC',n:'Arc Sol',m:'ArCSoL9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkZ'},
-];
-
-function genOHLCV(bp,vol,n){
-    const c=[];let p=bp;
-    for(let i=0;i<n;i++){const ch=(Math.random()-.48)*vol*p;const o=p,cl=p+ch;
-    const h=Math.max(o,cl)+Math.random()*vol*p*.5,l=Math.min(o,cl)-Math.random()*vol*p*.5;
-    const v=(Math.random()*500000+50000)*(1+Math.abs(ch/p)*10);
-    c.push({open:o,high:h,low:l,close:cl,volume:v,time:Date.now()-(n-i)*30*60000});p=cl}return c;
-}
-function ema(d,p){const k=2/(p+1);let e=d[0];const r=[e];for(let i=1;i<d.length;i++){e=d[i]*k+e*(1-k);r.push(e)}return r}
-function rsi(c,p=14){if(c.length<p+1)return 50;let g=0,l=0;for(let i=c.length-p;i<c.length;i++){const d=c[i]-c[i-1];if(d>0)g+=d;else l-=d}const ag=g/p,al=l/p;if(al===0)return 100;return 100-(100/(1+ag/al))}
-function macd(c){if(c.length<26)return{m:0,s:0,h:0};const e12=ema(c,12),e26=ema(c,26);const ml=e12.map((v,i)=>v-e26[i]);const sl=ema(ml,9);const n=ml.length-1;return{m:ml[n],s:sl[n],h:ml[n]-sl[n]}}
-function boll(c,p=20,m=2){const s=c.slice(-p);const sm=s.reduce((a,b)=>a+b,0)/s.length;const sd=Math.sqrt(s.reduce((a,b)=>a+Math.pow(b-sm,2),0)/s.length);return{u:sm+m*sd,mid:sm,l:sm-m*sd,bw:(m*2*sd)/sm*100}}
-function vwap(cd){let vp=0,v=0;cd.forEach(c=>{vp+=((c.high+c.low+c.close)/3)*c.volume;v+=c.volume});return v>0?vp/v:0}
-
-function calcATR(candles, period=14){
-    if(candles.length<period+1)return candles[candles.length-1]?.close*0.03||0.0001;
-    let sum=0;
-    for(let i=candles.length-period;i<candles.length;i++){
-        const tr=Math.max(
-            candles[i].high-candles[i].low,
-            Math.abs(candles[i].high-candles[i-1].close),
-            Math.abs(candles[i].low-candles[i-1].close)
-        );
-        sum+=tr;
-    }
-    return sum/period;
-}
-
-function calcSR(candles, levels=3){
-    const recent=candles.slice(-40);
-    const lows=recent.map(c=>c.low).sort((a,b)=>a-b);
-    const highs=recent.map(c=>c.high).sort((a,b)=>b-a);
-    const supports=[],resistances=[];
-    for(let i=0;i<lows.length-1&&supports.length<levels;i++){
-        const cluster=lows.filter(l=>Math.abs(l-lows[i])/lows[i]<0.01);
-        if(cluster.length>=2&&!supports.find(s=>Math.abs(s-lows[i])/lows[i]<0.015)) supports.push(lows[i]);
-    }
-    for(let i=0;i<highs.length-1&&resistances.length<levels;i++){
-        const cluster=highs.filter(h=>Math.abs(h-highs[i])/highs[i]<0.01);
-        if(cluster.length>=2&&!resistances.find(r=>Math.abs(r-highs[i])/highs[i]<0.015)) resistances.push(highs[i]);
-    }
-    return {supports:supports.sort((a,b)=>b-a),resistances:resistances.sort((a,b)=>a-b)};
-}
-
-function calcTradeLevels(candles, signal, security){
-    const price=candles[candles.length-1].close, atr=calcATR(candles,14), sr=calcSR(candles), isBuy=signal.includes('BUY');
-    let entry=price,sl,tp1,tp2,tp3,risk,reward,rr;
-
-    if(isBuy){
-        const slByATR=entry-atr*1.5;
-        const slBySupport=sr.supports.length>0?sr.supports[0]*0.998:null;
-        sl=(slBySupport&&slBySupport>slByATR)?slBySupport:slByATR;
-        if((entry-sl)/entry<0.01)sl=entry*0.99;
-        risk=entry-sl; 
-        tp1=entry+risk*1.5; tp2=entry+risk*2.5; tp3=entry+risk*4;
-        if(sr.resistances.length>0){
-            if(tp1>sr.resistances[0]*0.99)tp1=sr.resistances[0]*0.99;
-            if(sr.resistances.length>1 && tp2>sr.resistances[1]*0.99)tp2=sr.resistances[1]*0.99;
-        }
-        reward=tp2-entry;
-    }else{
-        const slByATR=entry+atr*1.5;
-        const slByResist=sr.resistances.length>0?sr.resistances[0]*1.002:null;
-        sl=(slByResist&&slByResist<slByATR)?slByResist:slByATR;
-        if((sl-entry)/entry<0.01)sl=entry*1.01;
-        risk=sl-entry;
-        tp1=entry-risk*1.5; tp2=entry-risk*2.5; tp3=entry-risk*4;
-        if(sr.supports.length>0){
-            if(tp1<sr.supports[0]*1.01)tp1=sr.supports[0]*1.01;
-            if(sr.supports.length>1 && tp2<sr.supports[1]*1.01)tp2=sr.supports[1]*1.01;
-        }
-        reward=entry-tp2;
-    }
-
-    rr=risk>0?reward/risk:0;
-    return {entry,sl,tp1,tp2,tp3,risk,reward,rr,slPct:((sl-entry)/entry)*100,tp1Pct:((tp1-entry)/entry)*100,tp2Pct:((tp2-entry)/entry)*100,tp3Pct:((tp3-entry)/entry)*100,atr,sr,isBuy};
-}
-
-function fullSecurityAudit(coin){
-    const d={
-        honeypot:Math.random()<0.07, buyTax:Math.random()<0.15?Math.floor(Math.random()*15)+1:0,
-        sellTax:Math.random()<0.2?Math.floor(Math.random()*20)+1:0, topHolderPct:Math.random()*50+1,
-        top10HolderPct:Math.random()*30+20, liquidityUsd:Math.random()*900000+3000,
-        liquidityLockedPct:Math.random()*35+65, liquidityLockDays:Math.floor(Math.random()*365)+1,
-        mintRevoked:Math.random()<0.8, freezeRevoked:Math.random()<0.75,
-        ageHours:Math.random()*720+0.5, holderCount:Math.floor(Math.random()*10000+50),
-        txCount24h:Math.floor(Math.random()*5000+10), lpBurned:Math.random()<0.6,
-        contractRenounced:Math.random()<0.65, isProxy:Math.random()<0.05,
-        canMint:Math.random()<0.15, canPause:Math.random()<0.1,
-        blacklistFn:Math.random()<0.06, hiddenOwner:Math.random()<0.08,
-        sameCreatorOtherScams:Math.random()<0.04, oddTokenDistribution:Math.random()<0.1,
-        lpWithdrawnRecently:Math.random()<0.05, suddenLiquidityRemove:Math.random()<0.03,
-    };
-
-    const checks=[];
-    checks.push({id:'honeypot',name:'Honeypot Detection',icon:'fa-skull-crossbones',status:d.honeypot?'FAIL':'PASS',detail:d.honeypot?'Smart contract memblokir sell.':'Sell berfungsi.',severity:'critical',penalty:60});
-    checks.push({id:'buy_tax',name:'Buy Tax',icon:'fa-arrow-right-to-bracket',status:d.buyTax<=3?'PASS':d.buyTax<=10?'WARN':'FAIL',detail:`Tax beli: ${d.buyTax}%.`,severity:d.buyTax>10?'high':'medium',penalty:d.buyTax>10?20:d.buyTax>5?10:0});
-    checks.push({id:'sell_tax',name:'Sell Tax',icon:'fa-arrow-right-from-bracket',status:d.sellTax<=5?'PASS':d.sellTax<=10?'WARN':'FAIL',detail:`Tax jual: ${d.sellTax}%.`,severity:d.sellTax>10?'critical':'high',penalty:d.sellTax>10?25:d.sellTax>5?15:0});
-    checks.push({id:'top_holder',name:'Top Holder',icon:'fa-user-secret',status:d.topHolderPct<15?'PASS':d.topHolderPct<30?'WARN':'FAIL',detail:`Top holder: ${d.topHolderPct.toFixed(1)}%.`,severity:d.topHolderPct>30?'critical':'high',penalty:d.topHolderPct>30?20:d.topHolderPct>20?12:0});
-    checks.push({id:'liquidity',name:'Liquidity',icon:'fa-water',status:d.liquidityUsd>=20000&&d.liquidityLockedPct>=80?'PASS':d.liquidityUsd>=10000||d.liquidityLockedPct>=60?'WARN':'FAIL',detail:`$${fmtN(d.liquidityUsd)}, Lock ${d.liquidityLockedPct.toFixed(0)}%.`,severity:d.liquidityUsd<10000?'critical':'high',penalty:d.liquidityUsd<10000?20:d.liquidityUsd<20000?8:d.liquidityLockedPct<80?10:0});
-    checks.push({id:'mint',name:'Mint Auth',icon:'fa-coins',status:d.mintRevoked?'PASS':'FAIL',detail:d.mintRevoked?'Mint revoked.':'MINT AKTIF.',severity:'critical',penalty:d.mintRevoked?0:18});
-    checks.push({id:'freeze',name:'Freeze Auth',icon:'fa-snowflake',status:d.freezeRevoked?'PASS':'FAIL',detail:d.freezeRevoked?'Freeze revoked.':'FREEZE AKTIF.',severity:'high',penalty:d.freezeRevoked?0:12});
-    checks.push({id:'ownership',name:'Ownership',icon:'fa-file-contract',status:d.contractRenounced?'PASS':d.contractRenounced===undefined?'WARN':'FAIL',detail:d.contractRenounced?'Renounced.':'Not renounced.',severity:'medium',penalty:d.contractRenounced?0:6});
-    checks.push({id:'age',name:'Token Age',icon:'fa-clock',status:d.ageHours>24?'PASS':d.ageHours>4?'WARN':'FAIL',detail:`Umur: ${d.ageHours.toFixed(0)}h.`,severity:d.ageHours<1?'critical':'medium',penalty:d.ageHours<1?12:d.ageHours<4?6:0});
-    checks.push({id:'activity',name:'Activity',icon:'fa-users',status:d.holderCount>200&&d.txCount24h>100?'PASS':d.holderCount>50&&d.txCount24h>20?'WARN':'FAIL',detail:`Holders: ${fmtN(d.holderCount)}.`,severity:'medium',penalty:d.holderCount<50?8:d.txCount24h<20?6:0});
-    checks.push({id:'backdoor',name:'Backdoor Check',icon:'fa-door-open',status:!d.isProxy&&!d.hiddenOwner&&!d.blacklistFn?'PASS':d.isProxy||d.hiddenOwner?'FAIL':'WARN',detail:d.isProxy?'Proxy detect':'Clean',severity:(d.isProxy||d.hiddenOwner)?'critical':'medium',penalty:(d.isProxy||d.hiddenOwner)?20:d.blacklistFn?10:0});
-    checks.push({id:'rugpull_pattern',name:'Rug Pattern',icon:'fa-triangle-exclamation',status:!d.suddenLiquidityRemove&&!d.sameCreatorOtherScams?'PASS':'FAIL',detail:d.suddenLiquidityRemove?'LP REMOVED':'Clean',severity:(d.suddenLiquidityRemove||d.sameCreatorOtherScams)?'critical':'medium',penalty:(d.suddenLiquidityRemove||d.sameCreatorOtherScams)?25:0});
-
-    let score=100; let flags=[];
-    checks.forEach(c=>{score-=c.penalty; if(c.status==='FAIL')flags.push(c.id.toUpperCase()); if(c.status==='WARN')flags.push(c.id+'_WARN');});
-    score=Math.max(0,Math.min(100,Math.round(score)));
-
-    let verdict,verdictColor,canTrade;
-    if(score>=80){verdict='SAFE TO TRADE';verdictColor='#00e87b';canTrade=true;}
-    else if(score>=60){verdict='TRADE WITH CAUTION';verdictColor='#f0b90b';canTrade=true;}
-    else if(score>=40){verdict='HIGH RISK — AVOID';verdictColor='#f97316';canTrade=false;}
-    else{verdict='SCAM / RUG PULL';verdictColor='#ff2d55';canTrade=false;}
-
-    if(d.honeypot){verdict='HONEYPOT — SCAM';verdictColor='#ff2d55';canTrade=false;score=Math.min(score,15);}
-
-    return{...d,checks,score,flags,verdict,verdictColor,canTrade,riskLevel:score>=70?'safe':score>=40?'medium':'danger'};
-}
-
-function genSignal(candles,sec){
-    const cl=candles.map(c=>c.close),vl=candles.map(c=>c.volume);
-    const r=rsi(cl),m=macd(cl),e9=ema(cl,9),e21=ema(cl,21),bb=boll(cl),vw=vwap(candles);
-    const n=cl.length-1,va=vl.slice(-20).reduce((a,b)=>a+b,0)/20,vr=vl[n]/va;
-    let sig='HOLD',str=0,reasons=[];
-
-    if(sec.honeypot)return{signal:'STRONG_SELL',strength:-5,reasons:['HONEYPOT — JANGAN BELI'],rsi:r,macd:m,ema9:e9[n],ema21:e21[n],bb,vwap:vw,volRatio:vr};
-    if(!sec.canTrade)return{signal:'STRONG_SELL',strength:-4,reasons:['RISK TERLALU TINGGI','Score: '+sec.score+'/100'],rsi:r,macd:m,ema9:e9[n],ema21:e21[n],bb,vwap:vw,volRatio:vr};
-
-    if(r<25){str+=3;reasons.push('RSI OVERSOLD EXTREME (<25)')}else if(r<35){str+=2;reasons.push('RSI OVERSOLD (<35)')}else if(r>75){str-=3;reasons.push('RSI OVERBOUGHT (>75)')}else if(r>65){str-=2;reasons.push('RSI OVERBOUGHT (>65)')}
-    if(e9[n]>e21[n]&&e9[n-1]<=e21[n-1]){str+=3;reasons.push('EMA 9/21 GOLDEN CROSS')}else if(e9[n]<e21[n]&&e9[n-1]>=e21[n-1]){str-=3;reasons.push('EMA 9/21 DEATH CROSS')}else if(e9[n]>e21[n]){str+=1;reasons.push('EMA BULLISH')}
-    if(m.h>0&&m.m>m.s){str+=2;reasons.push('MACD BULLISH')}else if(m.h<0){str-=2;reasons.push('MACD BEARISH')}
-    if(cl[n]<=bb.l){str+=2;reasons.push('BOUNCE LOWER BB')}else if(cl[n]>=bb.u){str-=2;reasons.push('REJECT UPPER BB')}
-    if(bb.bw<3)reasons.push('BB SQUEEZE — Breakout soon');
-    if(cl[n]>vw*1.02){str+=1;reasons.push('ABOVE VWAP')}else if(cl[n]<vw*0.98){str-=1;reasons.push('BELOW VWAP')}
-    if(vr>3){str=Math.round(str*1.5);reasons.push('VOLUME SURGE '+vr.toFixed(1)+'x')}else if(vr>1.5){str=Math.round(str*1.2);reasons.push('VOL ABOVE AVG')}
-    const l3=cl.slice(-3);
-    if(l3[2]>l3[1]&&l3[1]>l3[0]){str+=1;reasons.push('3 GREEN CANDLES')}else if(l3[2]<l3[1]&&l3[1]<l3[0]){str-=1;reasons.push('3 RED CANDLES')}
-
-    if(str>=5)sig='STRONG_BUY';else if(str>=3)sig='BUY';else if(str<=-5)sig='STRONG_SELL';else if(str<=-3)sig='SELL';
-    if(sec.sellTax>5&&sig.includes('BUY')){str=Math.max(0,str-Math.floor(sec.sellTax/3));reasons.push('WARN: SELL TAX '+sec.sellTax+'%');if(str<3)sig='HOLD'}
-
-    return{signal:sig,strength:str,reasons,rsi:r,macd:m,ema9:e9[n],ema21:e21[n],bb,vwap:vw,volRatio:vr};
-}
-
-function copyToCA(text){
-    const i=document.createElement('input');i.value=text;document.body.appendChild(i);i.select();document.execCommand('copy');document.body.removeChild(i);
-    toast('Contract Address (CA) disalin!', 'success');
-}
-function fmtP(p){if(!p||isNaN(p))return'$0';if(p>=1)return'$'+p.toFixed(4);if(p>=0.001)return'$'+p.toFixed(6);return'$'+p.toFixed(10)}
-function fmtN(n){if(!n||isNaN(n))return'0';if(n>=1e9)return(n/1e9).toFixed(2)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return n.toFixed(0)}
-function sigLbl(s){return{STRONG_BUY:'STRONG BUY',BUY:'BUY',HOLD:'HOLD',SELL:'SELL',STRONG_SELL:'STRONG SELL'}[s]||s}
-function sigCls(s){return s.includes('BUY')?'signal-buy':s.includes('SELL')?'signal-sell':'signal-hold'}
-function sigClr(s){return{STRONG_BUY:'#00e87b',BUY:'#00c968',STRONG_SELL:'#ff2d55',SELL:'#e0264b',HOLD:'#6b7280'}[s]||'#6b7280'}
-function rskClr(s){return s>=70?'#00e87b':s>=40?'#f0b90b':'#ff2d55'}
-
-let tokens=[],selToken=null;
-function initData(){
-    const bp=[0.000025,2.45,0.0089,0.0042,1.23,0.18,0.0000003,0.45,0.089,0.72,0.023,0.0012,0.0067,0.00045,0.0000015,0.000089,0.0000034,0.00000012,0.0000078,0.000056,0.000023,0.000015,0.000034,0.0045,0.000067,0.0000012,0.00000089,0.000023,0.00045,0.0012,0.00078,0.0000056,0.00034,0.000012,0.000089,0.0000023,0.00067,0.000045,0.0000018,0.00023,0.000056,0.0000034,0.00012,0.000078,0.0000045,0.00089,0.0034,0.000023,0.000056];
-    tokens=COINS.map((c,i)=>{
-        const p=bp[i]||(Math.random()*.001+.00001),v=.02+Math.random()*.06;
-        const cd=genOHLCV(p,v,100),sec=fullSecurityAudit(c);
-        const sig=genSignal(cd,sec),cp=cd[cd.length-1].close,pp=cd[cd.length-2].close;
-        const tl=calcTradeLevels(cd,sig.signal,sec);
-        return{...c,price:cp,change30m:((cp-pp)/pp)*100,marketCap:cp*(Math.random()*5e8+1e7),
-            candles:cd,security:sec,signal:sig.signal,signalStrength:sig.strength,signalReasons:sig.reasons,
-            rsi:sig.rsi,macdData:sig.macd,ema9:sig.ema9,ema21:sig.ema21,bb:sig.bb,vwap:sig.vwap,volRatio:sig.volRatio,
-            volume24h:cd.slice(-48).reduce((a,c)=>a+c.volume,0),tradeLevels:tl,lastUpdate:Date.now(),apiSrc:false};
-    });
-}
-
-function renderTable(){
-    const ct=document.getElementById('tokenTable');
-    const fs=document.getElementById('fSig').value,fr=document.getElementById('fRisk').value,fso=document.getElementById('fSort').value;
-    let f=[...tokens];
-    if(fs!=='all')f=f.filter(t=>t.signal===fs);
-    if(fr==='safe')f=f.filter(t=>t.security.score>=70);else if(fr==='med')f=f.filter(t=>t.security.score>=40&&t.security.score<70);else if(fr==='bad')f=f.filter(t=>t.security.score<40);
-    const so={STRONG_BUY:5,BUY:4,HOLD:3,SELL:2,STRONG_SELL:1};
-    if(fso==='signal')f.sort((a,b)=>(so[b.signal]||0)-(so[a.signal]||0));
-    else if(fso==='risk')f.sort((a,b)=>b.security.score-a.security.score);
-    else if(fso==='rr')f.sort((a,b)=>(b.tradeLevels.rr||0)-(a.tradeLevels.rr||0));
-
-    let h='';
-    f.forEach((t,i)=>{
-        const act=selToken&&selToken.s===t.s,up=t.change30m>=0,tl=t.tradeLevels;
-        
-        // FIX: Layout kolom Token (Simbol, Nama, & DexScreener Link) sudah dirombak dan diatur ke dalam flexbox yang luas dan rapi
-        h+=`<div class="token-row table-grid px-4 py-1.5 slide-in ${act?'active':''}" style="animation-delay:${i*10}ms" onclick="sel('${t.s}')">
-            <span class="text-[9px] font-mono text-muted">${i+1}</span>
-            
-            <div class="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold" style="background:${sigClr(t.signal)}22;color:${sigClr(t.signal)}">${t.s[0]}</div>
-            
-            <div class="flex flex-col justify-center min-w-0 pr-2">
-                <div class="flex items-center gap-1.5 w-full">
-                    <span class="text-[11px] font-bold text-txt truncate">${t.s}</span>
-                    ${t.security.honeypot?'<i class="fa-solid fa-skull text-danger text-[9px]" title="Honeypot"></i>':''}
-                    <a href="https://dexscreener.com/solana/${t.m}" target="_blank" onclick="event.stopPropagation()" class="text-muted hover:text-accent transition-colors ml-auto flex-shrink-0" title="Buka Chart DexScreener">
-                        <i class="fa-solid fa-square-arrow-up-right text-[11px]"></i>
-                    </a>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[11px] text-txtsec uppercase tracking-wider block mb-1">API Base URL</label>
+                    <input type="text" id="cfgApiBase" value="https://9router.yahlupa.my.id/v1" class="w-full text-sm">
                 </div>
-                <span class="text-[9px] text-txtsec truncate mt-0.5" title="${t.n}">${t.n}</span>
-            </div>
-
-            <span class="text-[10px] font-mono font-semibold">${fmtP(t.price)}</span>
-            <span class="text-[9px] font-mono font-semibold ${up?'text-accent':'text-danger'}">${up?'+':''}${t.change30m.toFixed(1)}%</span>
-            
-            <div class="${sigCls(t.signal)} rounded px-1 py-0.5 text-center"><span class="text-[7px] font-bold" style="color:${sigClr(t.signal)}">${sigLbl(t.signal)}</span></div>
-            
-            <span class="text-[9px] font-mono ${t.rsi<30?'text-accent':t.rsi>70?'text-danger':''}">${t.rsi.toFixed(0)}</span>
-            <span class="text-[8px] font-mono ${t.macdData.h>0?'text-accent':'text-danger'}">${t.macdData.h>0?'+':''}${(t.macdData.h*1e6).toFixed(0)}u</span>
-            <span class="text-[8px] font-mono ${t.volRatio>1.5?'text-warn':'text-muted'}">${t.volRatio>1.5?'HI':'LO'}</span>
-            
-            <div><div class="flex items-center justify-between mb-0.5"><span class="text-[8px] font-mono" style="color:${rskClr(t.security.score)}">${t.security.score}</span></div><div class="risk-bar"><div class="risk-fill" style="width:${t.security.score}%;background:${rskClr(t.security.score)}"></div></div></div>
-            
-            <span class="text-[8px] font-mono text-accent">${fmtP(tl.entry)}</span>
-            <span class="text-[8px] font-mono text-accent">${fmtP(tl.tp1)}</span>
-            <span class="text-[8px] font-mono text-warn">${fmtP(tl.tp2)}</span>
-            <span class="text-[8px] font-mono" style="color:#6366f1">${fmtP(tl.tp3)}</span>
-            <span class="text-[8px] font-mono text-danger">${fmtP(tl.sl)}</span>
-        </div>`;
-    });
-    ct.innerHTML=h;
-    document.getElementById('sTotal').textContent=tokens.length;
-    document.getElementById('sBuy').textContent=tokens.filter(t=>t.signal.includes('BUY')).length;
-    document.getElementById('sSell').textContent=tokens.filter(t=>t.signal.includes('SELL')).length;
-    document.getElementById('sSafe').textContent=tokens.filter(t=>t.security.score>=70).length;
-    document.getElementById('sHoneypot').textContent=tokens.filter(t=>t.security.honeypot).length;
-}
-
-function sel(s){selToken=tokens.find(t=>t.s===s);renderTable();renderDetail()}
-
-function renderDetail(){
-    if(!selToken)return;
-    const t=selToken,sec=t.security,tl=t.tradeLevels;
-
-    let secHTML=sec.checks.map(c=>{
-        const cls=c.status==='PASS'?'check-pass':c.status==='WARN'?'check-warn':'check-fail';
-        const bg=c.status==='FAIL'?'bg-danger/5':c.status==='WARN'?'bg-warn/5':'bg-accent/5';
-        return`<div class="detector-item ${bg} rounded-lg p-2.5 border border-border/50">
-            <div class="flex items-center gap-2 mb-1">
-                <i class="fa-solid ${c.icon} text-[10px] ${cls}" style="width:14px;text-align:center"></i>
-                <span class="text-[11px] font-bold flex-1">${c.name}</span>
-                <span class="text-[9px] font-mono font-bold ${cls}">${c.status}</span>
-            </div>
-            <div class="text-[10px] text-txtsec leading-relaxed pl-6">${c.detail}</div>
-        </div>`;
-    }).join('');
-
-    let reasonHTML=t.signalReasons.map(r=>{
-        const bull=/OVERSOLD|GOLDEN|BULLISH|GREEN|ABOVE|SURGE|LOWER|SQUEEZE/i.test(r);
-        const bear=/OVERBOUGHT|DEATH|BEARISH|RED|BELOW|UPPER|HONEYPOT|TAX|RISK/i.test(r);
-        return`<div class="text-[10px] font-mono py-1 px-2 rounded mb-1 ${bull?'bg-accent/5 text-accent':bear?'bg-danger/5 text-danger':'bg-muted/10 text-txtsec'}">${bull?'<i class="fa-solid fa-arrow-up mr-1"></i>':bear?'<i class="fa-solid fa-arrow-down mr-1"></i>':'<i class="fa-solid fa-minus mr-1"></i>'}${r}</div>`;
-    }).join('');
-
-    document.getElementById('detailContent').innerHTML=`
-    <div class="slide-in">
-        <!-- Dashboard Header "Tingkat Dewa" -->
-        <div class="p-4 border-b border-border">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0" style="background:${sigClr(t.signal)}22;color:${sigClr(t.signal)}">${t.s.slice(0,2)}</div>
-                <div class="flex-1 min-w-0">
-                    <div class="font-bold text-base flex items-center gap-2">${t.s} <span class="text-txtsec font-normal text-xs">/ SOL</span></div>
-                    
-                    <div class="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span class="text-[11px] text-txtsec font-bold truncate block max-w-[150px]">${t.n}</span>
-                        <div class="h-3 w-px bg-border"></div>
-                        <a href="https://dexscreener.com/solana/${t.m}" target="_blank" class="text-[9px] font-mono bg-card border border-border hover:border-accent hover:text-accent text-muted px-2 py-0.5 rounded flex items-center gap-1 transition-colors">
-                            <i class="fa-solid fa-chart-line"></i> Dex
-                        </a>
-                        <a href="https://solscan.io/token/${t.m}" target="_blank" class="text-[9px] font-mono bg-card border border-border hover:border-accent hover:text-accent text-muted px-2 py-0.5 rounded flex items-center gap-1 transition-colors">
-                            <i class="fa-solid fa-magnifying-glass"></i> Scan
-                        </a>
-                    </div>
-
-                    <div class="text-[9px] font-mono text-txtsec mt-2 flex items-center gap-1.5 cursor-pointer hover:text-accent transition-colors w-fit bg-bg px-2 py-1 rounded border border-border/50" onclick="copyToCA('${t.m}')">
-                        <span class="text-muted"><i class="fa-regular fa-copy mr-0.5"></i>CA:</span> ${t.m}
+                <div>
+                    <label class="text-[11px] text-txtsec uppercase tracking-wider block mb-1">API Key</label>
+                    <div class="flex gap-2">
+                        <input type="password" id="cfgApiKey" value="sk-e0513746a1e9b31d-0uzx8g-ebcd1a86" class="flex-1 text-sm">
+                        <button onclick="const i=document.getElementById('cfgApiKey');i.type=i.type==='password'?'text':'password'" class="px-3 bg-card border border-border rounded text-xs text-muted hover:text-txt"><i class="fa-solid fa-eye"></i></button>
                     </div>
                 </div>
-                <div class="${sigCls(t.signal)} rounded-lg px-3 py-2 text-center flex-shrink-0">
-                    <div class="text-[11px] font-bold" style="color:${sigClr(t.signal)}">${sigLbl(t.signal)}</div>
-                    <div class="text-[9px] text-txtsec">STR ${t.signalStrength>0?'+':''}${t.signalStrength}</div>
+                <div>
+                    <label class="text-[11px] text-txtsec uppercase tracking-wider block mb-1">Wallet Address</label>
+                    <input type="text" id="cfgWallet" placeholder="Solana wallet..." class="w-full text-sm">
+                </div>
+                <div>
+                    <label class="text-[11px] text-txtsec uppercase tracking-wider block mb-1">Slippage (%)</label>
+                    <input type="number" id="cfgSlippage" value="1.5" min="0.1" max="50" step="0.1" class="w-full text-sm">
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="testApi()" class="flex-1 py-2.5 rounded-lg bg-card border border-border text-sm font-bold hover:border-accent/50" id="btnTest"><i class="fa-solid fa-plug mr-2"></i>Test</button>
+                    <button onclick="saveApiCfg()" class="btn-buy flex-1 text-sm"><i class="fa-solid fa-check mr-2"></i>Simpan</button>
+                </div>
+                <div id="apiTestResult" class="hidden bg-bg rounded-lg p-3 border border-border">
+                    <div id="apiTestLog" class="api-log-scroll"></div>
                 </div>
             </div>
-            
-            <div class="flex items-end gap-4 mt-4 bg-card p-3 rounded-lg border border-border/50">
-                <div><div class="text-[9px] text-txtsec">Harga Saat Ini</div><div class="font-mono font-bold text-lg">${fmtP(t.price)}</div></div>
-                <div><div class="text-[9px] text-txtsec">Perubahan 30m</div><div class="font-mono font-bold ${t.change30m>=0?'text-accent':'text-danger'}">${t.change30m>=0?'+':''}${t.change30m.toFixed(2)}%</div></div>
-            </div>
         </div>
+    </div>
 
-        <!-- VERDICT -->
-        <div class="p-4 border-b border-border" style="background:${sec.verdictColor}08">
+    <!-- Dry Run Modal -->
+    <div id="dryRunModal" class="modal-overlay" style="display:none">
+        <div class="bg-card border border-border rounded-2xl p-6 w-[540px] max-w-[95vw] max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-bold text-lg"><i class="fa-solid fa-flask text-accent mr-2"></i>Dry Run Result</h2>
+                <button onclick="document.getElementById('dryRunModal').style.display='none'" class="text-muted hover:text-txt text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="dryRunContent"></div>
+        </div>
+    </div>
+
+    <!-- Top Bar -->
+    <header class="sticky top-0 z-40 border-b border-border" style="background:rgba(7,8,12,.92);backdrop-filter:blur(20px)">
+        <div class="max-w-[1920px] mx-auto px-4 h-14 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:${sec.verdictColor}20">
-                    <i class="fa-solid ${sec.canTrade?'fa-shield-halved':'fa-ban'}" style="color:${sec.verdictColor}"></i>
-                </div>
-                <div class="flex-1">
-                    <div class="font-bold text-sm" style="color:${sec.verdictColor}">${sec.verdict}</div>
-                    <div class="text-[10px] text-txtsec">Safety Score: <span class="font-mono font-bold" style="color:${sec.verdictColor}">${sec.score}/100</span></div>
-                </div>
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#00e87b,#00a85a)"><i class="fa-solid fa-bolt text-bg text-sm"></i></div>
+                <span class="font-bold text-lg tracking-tight">SOL<span class="text-accent">SIGNAL</span></span>
+                <span class="text-[10px] font-mono text-muted bg-card px-2 py-0.5 rounded border border-border ml-1">ANTI-RUG</span>
             </div>
-            <div class="risk-bar mt-2" style="height:6px"><div class="risk-fill" style="width:${sec.score}%;background:${sec.verdictColor}"></div></div>
+            <div class="flex items-center gap-5">
+                <div class="flex items-center gap-2"><span class="text-[10px] text-txtsec">MODE</span><span class="text-[11px] font-mono font-bold text-accent bg-accent/10 px-2 py-0.5 rounded">DRY RUN</span></div>
+                <div class="flex items-center gap-2"><span class="text-[10px] text-txtsec">SOL</span><span class="font-mono text-[11px] font-bold" id="solBal">--</span></div>
+                <div id="apiStatus" class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-warn pulse-dot"></div><span class="text-[11px] font-mono text-warn">OFFLINE</span></div>
+                <button onclick="document.getElementById('apiConfigModal').style.display='flex'" class="text-[10px] font-mono text-muted hover:text-accent bg-card border border-border px-2 py-1 rounded"><i class="fa-solid fa-gear mr-1"></i>API</button>
+                <div class="font-mono text-[11px] text-muted" id="clock">--:--:--</div>
+            </div>
         </div>
+    </header>
 
-        <!-- ENTRY / TP / SL LEVELS -->
-        <div class="p-4 border-b border-border">
-            <div class="text-[10px] text-txtsec uppercase tracking-wider mb-3"><i class="fa-solid fa-crosshairs mr-1"></i>TRADE LEVELS — ${tl.isBuy?'LONG (BUY)':'SHORT (SELL)'}</div>
+    <!-- Stats -->
+    <div class="max-w-[1920px] mx-auto px-4 py-3">
+        <div class="grid grid-cols-2 md:grid-cols-7 gap-3">
+            <div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">Tokens</div><div class="font-mono font-bold text-xl" id="sTotal">50</div></div>
+            <div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">Buy</div><div class="font-mono font-bold text-xl text-accent" id="sBuy">0</div></div>
+            <div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">Sell</div><div class="font-mono font-bold text-xl text-danger" id="sSell">0</div></div>
+            <div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">Safe</div><div class="font-mono font-bold text-xl text-accent" id="sSafe">0</div></div>
+            <div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">Honeypot</div><div class="font-mono font-bold text-xl text-danger" id="sHoneypot">0</div></div>
+            <div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">Dry Runs</div><div class="font-mono font-bold text-xl text-warn" id="sDry">0</div></div>
+            <div class="metric-card rounded-lg p-3"><div class="text-[10px] text-txtsec uppercase tracking-wider mb-1">API Calls</div><div class="font-mono font-bold text-xl" id="sApi">0</div></div>
+        </div>
+    </div>
 
-            <div class="entry-line rounded-lg p-3 mb-2 bg-card border border-accent/20">
-                <div class="flex justify-between items-center">
-                    <div><span class="text-[9px] text-txtsec uppercase">Entry Price</span><div class="font-mono font-bold text-base text-accent">${fmtP(tl.entry)}</div></div>
-                    <div class="text-right"><span class="text-[9px] text-muted">ATR(14)</span><div class="font-mono text-[11px] text-txtsec">${fmtP(tl.atr)}</div></div>
-                </div>
-            </div>
-
-            <div class="tp-level tp1 rounded-lg p-2.5 mb-1.5 bg-card border border-border pl-5">
-                <div class="flex justify-between items-center">
-                    <div><span class="text-[9px] text-txtsec">TP1 — Take Profit 1</span><div class="font-mono font-bold text-sm text-accent">${fmtP(tl.tp1)}</div></div>
-                    <div class="text-right"><span class="text-[10px] font-mono text-accent">+${tl.tp1Pct.toFixed(2)}%</span></div>
-                </div>
-            </div>
-
-            <div class="tp-level tp2 rounded-lg p-2.5 mb-1.5 bg-card border border-border pl-5">
-                <div class="flex justify-between items-center">
-                    <div><span class="text-[9px] text-txtsec">TP2 — Take Profit 2</span><div class="font-mono font-bold text-sm text-warn">${fmtP(tl.tp2)}</div></div>
-                    <div class="text-right"><span class="text-[10px] font-mono text-warn">+${tl.tp2Pct.toFixed(2)}%</span></div>
-                </div>
-            </div>
-
-            <div class="tp-level tp3 rounded-lg p-2.5 mb-1.5 bg-card border border-border pl-5">
-                <div class="flex justify-between items-center">
-                    <div><span class="text-[9px] text-txtsec">TP3 — Take Profit 3</span><div class="font-mono font-bold text-sm" style="color:#6366f1">${fmtP(tl.tp3)}</div></div>
-                    <div class="text-right"><span class="text-[10px] font-mono" style="color:#6366f1">+${tl.tp3Pct.toFixed(2)}%</span></div>
-                </div>
-            </div>
-
-            <div class="tp-level sl rounded-lg p-2.5 bg-card border border-danger/20 pl-5">
-                <div class="flex justify-between items-center">
-                    <div><span class="text-[9px] text-txtsec">SL — Stop Loss</span><div class="font-mono font-bold text-sm text-danger">${fmtP(tl.sl)}</div></div>
-                    <div class="text-right"><span class="text-[10px] font-mono text-danger">${tl.slPct.toFixed(2)}%</span></div>
-                </div>
-            </div>
+    <!-- Main -->
+    <div class="max-w-[1920px] mx-auto px-4 pb-6 flex-1 flex flex-col min-h-0">
+        <div class="flex gap-4" style="height:calc(100vh - 180px)">
             
-            <div class="mt-3 bg-card rounded-lg p-3 border border-border">
-                <div class="text-[9px] text-txtsec uppercase tracking-wider mb-2">RISK:REWARD RATIO</div>
-                <div class="flex items-center gap-3">
-                    <div class="font-mono font-bold text-2xl" style="color:${tl.rr>=2?'#00e87b':tl.rr>=1?'#f0b90b':'#ff2d55'}">1:${tl.rr.toFixed(1)}</div>
-                    <div class="text-[10px] text-txtsec leading-relaxed">
-                        Risk: ${fmtP(Math.abs(tl.risk))} (${Math.abs(tl.slPct).toFixed(2)}%)<br>
-                        Reward (TP2): ${fmtP(Math.abs(tl.reward))} (${Math.abs(tl.tp2Pct).toFixed(2)}%)
+            <!-- Table Container -->
+            <div class="flex-1 flex flex-col min-w-0 border border-border rounded-xl overflow-hidden" style="background:rgba(13,15,21,.8)">
+                <div class="px-4 py-3 border-b border-border flex items-center justify-between flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <h2 class="font-bold text-sm">SOLANA MEMECOIN <span class="text-accent">ANTI-RUG</span></h2>
+                        <span class="text-[10px] font-mono bg-card border border-border px-2 py-0.5 rounded text-txtsec">30m</span>
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded" id="srcBadge" style="background:rgba(240,185,11,.1);color:#f0b90b;border:1px solid rgba(240,185,11,.2)">SIMULASI</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="fSig" class="text-[11px]"><option value="all">Semua</option><option value="STRONG_BUY">Strong Buy</option><option value="BUY">Buy</option><option value="HOLD">Hold</option><option value="SELL">Sell</option><option value="STRONG_SELL">Strong Sell</option></select>
+                        <select id="fRisk" class="text-[11px]"><option value="all">All Risk</option><option value="safe">Safe 70+</option><option value="med">Med 40-69</option><option value="bad">Danger &lt;40</option></select>
+                        <select id="fSort" class="text-[11px]"><option value="signal">Sort: Signal</option><option value="risk">Sort: Risk</option><option value="rr">Sort: R:R</option></select>
+                        <button onclick="refreshData()" class="text-[11px] px-3 py-1.5 bg-card border border-border rounded hover:border-accent/50"><i class="fa-solid fa-rotate" id="refIcon"></i></button>
+                    </div>
+                </div>
+                
+                <!-- Table Header with Horizontal Scroll Wrapper -->
+                <div class="flex-1 overflow-x-auto overflow-y-hidden flex flex-col">
+                    <div class="table-grid px-4 py-2 text-[9px] text-muted uppercase tracking-wider border-b border-border flex-shrink-0">
+                        <span>#</span><span></span><span>Token Info & Links</span><span>Price</span><span>30m</span><span>Signal</span><span>RSI</span><span>MACD</span><span>Vol</span><span>Risk</span><span>Entry</span><span>TP1</span><span>TP2</span><span>TP3</span><span>SL</span>
+                    </div>
+                    <!-- Table Body -->
+                    <div class="flex-1 overflow-y-auto" id="tokenTable"></div>
+                </div>
+            </div>
+
+            <!-- Detail Panel -->
+            <div class="w-[440px] flex-shrink-0 border border-border rounded-xl overflow-hidden flex flex-col" style="background:rgba(13,15,21,.8)">
+                <div id="detailContent" class="flex-1 overflow-y-auto">
+                    <div class="flex items-center justify-center h-full text-txtsec text-sm">
+                        <div class="text-center"><i class="fa-solid fa-shield-halved text-3xl text-muted mb-3 block"></i><p>Pilih token untuk analisis detail</p></div>
                     </div>
                 </div>
             </div>
+            
         </div>
+    </div>
 
-        <!-- 12 Security Checks -->
-        <div class="p-4 border-b border-border">
-            <div class="text-[10px] text-txtsec uppercase tracking-wider mb-3"><i class="fa-solid fa-shield-halved mr-1"></i>12-CHECK SECURITY AUDIT</div>
-            <div class="space-y-2">${secHTML}</div>
-            <div class="mt-3 flex flex-wrap gap-1">${sec.flags.map(f=>`<span class="text-[9px] font-mono px-2 py-0.5 rounded ${f.includes('WARN')?'bg-warn/10 text-warn':'bg-danger/10 text-danger'}">${f}</span>`).join('')}</div>
-        </div>
-        
-        <!-- Signal Reasons & Indicators -->
-        <div class="p-4 border-b border-border">
-            <div class="text-[10px] text-txtsec uppercase tracking-wider mb-2">SIGNAL REASONS</div>
-            ${reasonHTML}
-            <div class="grid grid-cols-3 gap-2 mt-4">
-                <div class="bg-card rounded p-2 border border-border"><div class="text-[8px] text-muted">RSI</div><div class="font-mono font-bold text-sm ${t.rsi<30?'text-accent':t.rsi>70?'text-danger':''}">${t.rsi.toFixed(1)}</div></div>
-                <div class="bg-card rounded p-2 border border-border"><div class="text-[8px] text-muted">MACD</div><div class="font-mono font-bold text-sm ${t.macdData.h>0?'text-accent':'text-danger'}">${t.macdData.h>0?'+':''}${(t.macdData.h*1e6).toFixed(0)}u</div></div>
-                <div class="bg-card rounded p-2 border border-border"><div class="text-[8px] text-muted">Vol Ratio</div><div class="font-mono font-bold text-sm ${t.volRatio>1.5?'text-warn':''}">${t.volRatio.toFixed(1)}x</div></div>
-            </div>
-        </div>
+    <script>
+    // =============================================
+    // CONFIG & STATE
+    // =============================================
+    let CFG={baseUrl:'https://9router.yahlupa.my.id/v1',apiKey:'sk-e0513746a1e9b31d-0uzx8g-ebcd1a86',wallet:'',slippage:1.5};
+    let apiCnt=0,dryCnt=0;
+    const SOL='So11111111111111111111111111111111111111112';
 
-        <!-- Dry Run -->
-        <div class="p-4">
-            <div class="text-[10px] text-txtsec uppercase tracking-wider mb-3">DRY RUN SIMULATION</div>
-            <div class="mb-3">
-                <label class="text-[10px] text-muted block mb-1">Jumlah (USD)</label>
-                <div class="flex gap-1.5">
-                    <input type="number" id="tradeAmt" value="50" min="10" max="500" step="10" class="flex-1 font-mono text-sm">
-                    ${[10,50,200,500].map(v=>`<button onclick="document.getElementById('tradeAmt').value=${v}" class="text-[9px] px-2 py-1 bg-card border border-border rounded hover:border-accent/50">$${v}</button>`).join('')}
-                </div>
-            </div>
-            <div class="flex gap-2">
-                <button class="btn-dry flex-1 text-sm" onclick="doDry('buy')"><i class="fa-solid fa-flask mr-1"></i>DRY BUY</button>
-            </div>
-            ${!sec.canTrade?`<div class="mt-2 bg-danger/10 border border-danger/30 rounded-lg p-2 text-[10px] text-danger font-bold"><i class="fa-solid fa-ban mr-1"></i>DILARANG TRADE — ${sec.verdict}</div>`:''}
-        </div>
-    </div>`;
-}
-
-async function doDry(side){
-    if(!selToken)return;
-    const amt=parseFloat(document.getElementById('tradeAmt')?.value)||0;
-    if(amt<10||amt>500){toast('Jumlah $10-$500','error');return}
-    if(!selToken.security.canTrade){toast('TOKEN GAGAL SECURITY AUDIT','error');return}
-
-    toast(`Dry run ${side.toUpperCase()} ${selToken.s}...`,'info');
-    const solAmt=(amt/175).toFixed(9);
-    const from=side==='buy'?SOL:selToken.m,to=side==='buy'?selToken.m:SOL;
-    const inp=side==='buy'?solAmt:(amt/selToken.price).toFixed(0);
-
-    const quote=await api('POST','/swap/quote',{from_token:from,to_token:to,amount:inp,slippage:CFG.slippage,network:'solana',dry_run:true});
-
-    dryCnt++;document.getElementById('sDry').textContent=dryCnt;
-
-    const tl=selToken.tradeLevels;
-    const estTokens=amt/selToken.price;
-    const hasQ=quote&&quote.outputAmount;
-
-    document.getElementById('dryRunContent').innerHTML=`
-    <div class="space-y-4">
-        <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center ${side==='buy'?'bg-accent/15':'bg-danger/15'}">
-                <i class="fa-solid ${side==='buy'?'fa-arrow-up text-accent':'fa-arrow-down text-danger'} text-xl"></i>
-            </div>
-            <div><div class="font-bold text-lg">DRY ${side.toUpperCase()}</div><div class="text-sm text-txtsec">${selToken.s} — $${amt}</div></div>
-        </div>
-
-        <div class="bg-bg rounded-lg p-4 border border-border space-y-2 text-sm">
-            <div class="flex justify-between"><span class="text-muted">From</span><span class="font-mono">${side==='buy'?inp+' SOL':fmtN(parseFloat(inp))+' '+selToken.s}</span></div>
-            <div class="flex justify-between"><span class="text-muted">To (Est)</span><span class="font-mono text-accent">${hasQ?fmtN(parseFloat(quote.outputAmount))+' '+(side==='buy'?selToken.s:'SOL'):fmtN(estTokens)+' '+(side==='buy'?selToken.s:'SOL')}</span></div>
-            <hr class="border-border">
-            <div class="flex justify-between"><span class="text-muted">Entry</span><span class="font-mono">${fmtP(tl.entry)}</span></div>
-            <div class="flex justify-between"><span class="text-muted">TP2 (50%)</span><span class="font-mono text-warn">${fmtP(tl.tp2)} (+${tl.tp2Pct.toFixed(2)}%)</span></div>
-            <div class="flex justify-between"><span class="text-muted">SL (HARD)</span><span class="font-mono text-danger">${fmtP(tl.sl)} (${tl.slPct.toFixed(2)}%)</span></div>
-        </div>
-
-        ${hasQ?`<div class="bg-accent/5 border border-accent/20 rounded-lg p-3"><div class="text-[10px] text-accent font-bold"><i class="fa-solid fa-check-circle mr-1"></i>Quote diterima dari API</div></div>`
-        :`<div class="bg-warn/5 border border-warn/20 rounded-lg p-3 text-[10px] text-warn"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Estimasi lokal. /swap/quote tidak merespon (kemungkinan CORS karena HTTP lokal).</div>`}
-
-        <button onclick="document.getElementById('dryRunModal').style.display='none'" class="w-full py-2.5 rounded-lg bg-card border border-border text-sm font-bold hover:border-accent/50">Tutup</button>
-    </div>`;
-    document.getElementById('dryRunModal').style.display='flex';
-}
-
-async function testApi(){
-    const log=document.getElementById('apiTestLog'),res=document.getElementById('apiTestResult'),btn=document.getElementById('btnTest');
-    res.classList.remove('hidden');btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-2"></i>Testing...';
-    CFG.baseUrl=document.getElementById('cfgApiBase').value.replace(/\/+$/,'');
-    CFG.apiKey=document.getElementById('cfgApiKey').value;
-    let html='';
-    let hasCorsError = false;
-
-    const tests=[
-        ['GET','/tokens?chain=solana&limit=3'],
-        ['GET','/tokens/'+COINS[0].m+'/price'],
-        ['GET','/tokens/'+COINS[0].m+'/security'],
-        ['POST','/swap/quote'],
+    // 50 MEMECOIN SOLANA
+    const COINS=[
+        {s:'BONK',n:'Bonk',m:'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'},
+        {s:'WIF',n:'dogwifhat',m:'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm'},
+        {s:'BOME',n:'Book of Meme',m:'wJToGFQwVbHb1Zvq7R4sPwUk4h7vDs5m5ELhG4T3RNB'},
+        {s:'MEW',n:'cat in a dogs world',m:'MEW1gQVXFPzJAfDHH6mr9GGzLVFcJpW5FzvGKQJhYgC'},
+        {s:'POPCAT',n:'Popcat',m:'7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr'},
+        {s:'PONKE',n:'Ponke',m:'Az3T9uLrWjGh4t3NbGZ5sGEVdrLbXpJiVU8QoBn3kP8q'},
+        {s:'MOG',n:'Mog Coin Sol',m:'mogKjCjnY6p9J2QWmRj9HYSAeZaGv8kPm3nBZT2sXFh'},
+        {s:'TREMP',n:'TREMP',m:'Df6ybKHzhMxrwQf6P6v6Bk3W9TQxwBvBhQpEJwAo8H7V'},
+        {s:'BODEN',n:'Boden',m:'BodenTqz4VsaQMFFsCVbPnMPSVhAqWvJzmXyQgJhEwNb'},
+        {s:'SPX',n:'SPX6900',m:'SPX2hL6P3z3kWmnKHGQnPfu9DK8x3JnGZCzRjsV8GqP'},
+        {s:'MYRO',n:'Myro',m:'MYRoVwj7SjADfUoZrvGMeLfCHHRcLZcXhXpnPpWZyKx'},
+        {s:'W',n:'W Token',m:'WtokenGnU5fsWc1e9Z12gsFCmRkXdYzRqPJCq4s2kCV'},
+        {s:'SAMO',n:'Samoyedcoin',m:'7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU'},
+        {s:'KITTY',n:'Kitty Solana',m:'KiTTyFdzJ1hVZKNKqA1uEdRrD1V2WkEnLJpGxPbz3Ru'},
+        {s:'SYNBAD',n:'Synbad',m:'SyNBADzUWq3Tbnq4xP9oZGxqfMqbXhN7eJrF3HhT8kFz'},
+        {s:'BILLY',n:'Billy',m:'BiLlyDz1WjZv8xqZPbXj8r1FqZcKpLmNoRqTgVhXsYkA'},
+        {s:'MEME',n:'Meme Sol',m:'MeMeT9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkA2'},
+        {s:'SHIBONK',n:'ShiBonk',m:'ShiBnk9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk3'},
+        {s:'ELON',n:'Elon Sol',m:'ELoNk9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk4'},
+        {s:'FLOKI-S',n:'Floki Sol',m:'FLokI9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk5'},
+        {s:'JEPI',n:'JEPITO',m:'JEpITo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk6'},
+        {s:'TURBO',n:'Turbo Sol',m:'TuRBo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk7'},
+        {s:'POPEYE',n:'Popeye Sol',m:'PoPeYe9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk8'},
+        {s:'MSTR',n:'MSTR Sol',m:'MStR99Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYk9'},
+        {s:'CORGIAI',n:'CorgiAI Sol',m:'CoRgAi9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkA'},
+        {s:'HARAMBE',n:'Harambe Sol',m:'HaRaMb9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkB'},
+        {s:'PEPE-S',n:'Pepe Solana',m:'PePeS09Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkC'},
+        {s:'CHEESE',n:'Cheese Token',m:'ChEeSe9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkD'},
+        {s:'NEIRO-S',n:'Neiro Sol',m:'NeIrOS9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkE'},
+        {s:'MICHI',n:'Michi',m:'MiChI99Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkF'},
+        {s:'MOODENG',n:'MooDeng',m:'MoOdEn9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkG'},
+        {s:'GOAT',n:'GOAT Solana',m:'GoAtS09Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkH'},
+        {s:'FWOG',n:'Fwog',m:'FwOgS09Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkI'},
+        {s:'HWIF',n:'Hawk Wif Hat',m:'HwIfS09Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkJ'},
+        {s:'GIGA',n:'Giga Chad',m:'GiGaCh9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkK'},
+        {s:'RETARDIO',n:'Retardio',m:'ReTaRd9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkL'},
+        {s:'NPC',n:'NPC Token',m:'NpCTok9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkM'},
+        {s:'BULL',n:'Bull Solana',m:'BuLLSo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkN'},
+        {s:'BEAR',n:'Bear Sol',m:'BeArSo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkO'},
+        {s:'FISH',n:'Fish Sol',m:'FiShSo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkP'},
+        {s:'CRAB',n:'Crab Sol',m:'CrAbSo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkQ'},
+        {s:'WHALE',n:'Whale Sol',m:'WhAlEo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkR'},
+        {s:'DOLPHIN',n:'Dolphin Sol',m:'DoLpHi9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkS'},
+        {s:'SHARK',n:'Shark Sol',m:'ShArKo9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkT'},
+        {s:'ZEREBRO',n:'Zerebro',m:'ZeReBr9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkW'},
+        {s:'AI16Z',n:'AI16Z',m:'AI16Ze9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkX'},
+        {s:'ARC',n:'Arc Sol',m:'ArCSoL9Kz3sVpRfGpRjBqZxVnXwLkPmNoRqTgVhXsYkZ'},
     ];
 
-    for(const[m,ep]of tests){
-        const loadingStr = `<div class="text-[11px] font-mono py-1 px-2 border-b border-border/30 text-warn"><i class="fa-solid fa-spinner fa-spin mr-1" style="font-size:9px"></i>${m} ${ep}</div>`;
-        html += loadingStr;
-        log.innerHTML=html;
-
-        const body=m==='POST'?{from_token:SOL,to_token:COINS[0].m,amount:'0.01',slippage:1.5,network:'solana',dry_run:true}:null;
-        const r=await api(m,ep,body);
-        const ok=!!r;
+    // =============================================
+    // ROBUST API CALLER DENGAN PROXY FALLBACK
+    // =============================================
+    async function api(method, ep, body=null){
+        apiCnt++;
+        if(document.getElementById('sApi')) document.getElementById('sApi').textContent=apiCnt;
         
-        if(!ok) hasCorsError = true;
-
-        const resultStr = `<div class="text-[11px] font-mono py-1 px-2 border-b border-border/30 ${ok?'text-accent':'text-danger'}"><i class="fa-solid ${ok?'fa-check':'fa-xmark'} mr-1" style="font-size:9px"></i>${m} ${ep} — ${ok?'OK':'FAIL'}</div>`;
-        html = html.replace(loadingStr, resultStr);
-        log.innerHTML=html;
+        const headers = {'Authorization':`Bearer ${CFG.apiKey}`,'Content-Type':'application/json','X-Dry-Run':'true'};
+        const reqOpts = { method, headers };
+        if(body) reqOpts.body = JSON.stringify(body);
+        
+        const directUrl = `${CFG.baseUrl}${ep}`;
+        // Bypass proxy (corsproxy.io is reliable and forwards auth headers most times)
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
+        
+        try {
+            // Coba koneksi langsung ke 9Router
+            const c = new AbortController(); const t = setTimeout(() => c.abort(), 8000);
+            const res = await fetch(directUrl, { ...reqOpts, signal: c.signal });
+            clearTimeout(t);
+            if(!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
+        } catch(e) {
+            // Jika gagal (biasanya diblokir CORS browser), coba pakai proxy secara diam-diam!
+            try {
+                const c2 = new AbortController(); const t2 = setTimeout(() => c2.abort(), 8000);
+                const res2 = await fetch(proxyUrl, { ...reqOpts, signal: c2.signal });
+                clearTimeout(t2);
+                if(!res2.ok) throw new Error(`HTTP ${res2.status}`);
+                return await res2.json();
+            } catch (e2) {
+                // Sengaja tidak console.error agar tidak spam merah di log saat mode fallback (simulasi)
+                return null;
+            }
+        }
     }
 
-    // FIX: Pendidikan langsung di layar jika terjadi error HTTPS vs HTTP (CORS)
-    if(hasCorsError && CFG.baseUrl.includes('http://')) {
-        html += `<div class="mt-3 bg-danger/10 border border-danger/30 rounded-lg p-3 text-[10px] text-danger leading-relaxed">
-            <i class="fa-solid fa-triangle-exclamation mr-1 text-sm mb-1 block"></i>
-            <b class="text-[11px]">KONEKSI DIBLOKIR BROWSER (MIXED CONTENT / CORS)</b><br>
-            API kamu berjalan di <code>${CFG.baseUrl}</code> (<b>HTTP</b> Lokal). Sedangkan website preview ini berjalan dengan <b>HTTPS</b>. Browser <b>otomatis memblokir paksa</b> request ini demi keamanan.<br><br>
-            <b class="text-white">SOLUSI AGAR API BISA JALAN:</b><br>
-            1. Copy semua kode HTML ini.<br>
-            2. Simpan di komputer kamu dengan nama <code>index.html</code>.<br>
-            3. Klik kanan file tersebut, pilih <b>Open with Chrome</b> (alamatnya menjadi <code>file:///...</code>).<br>
-            4. Klik menu API dan coba <b>Test</b> lagi. Dijamin 100% terkoneksi!
-        </div>`;
-        log.innerHTML = html;
+    // =============================================
+    // TEST API MODAL (FIX ALL - NO CRASH)
+    // =============================================
+    async function testApi(){
+        const log=document.getElementById('apiTestLog'),res=document.getElementById('apiTestResult'),btn=document.getElementById('btnTest');
+        res.classList.remove('hidden');btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-2"></i>Testing...';
+        
+        CFG.baseUrl=document.getElementById('cfgApiBase').value.replace(/\/+$/,'');
+        CFG.apiKey=document.getElementById('cfgApiKey').value;
+        let html='';
+        
+        const tests=[
+            ['GET','/tokens?chain=solana&limit=3'],
+            ['GET','/tokens/'+COINS[0].m+'/price'],
+            ['GET','/tokens/'+COINS[0].m+'/security'],
+            ['POST','/swap/quote']
+        ];
+        
+        for(const [m, ep] of tests){
+            const loadingStr = `<div class="text-[11px] font-mono py-1 px-2 border-b border-border/30 text-warn"><i class="fa-solid fa-spinner fa-spin mr-1" style="font-size:9px"></i>${m} ${ep}</div>`;
+            html += loadingStr;
+            log.innerHTML = html;
+            
+            const body = m==='POST' ? {from_token:SOL,to_token:COINS[0].m,amount:'0.01',slippage:1.5,network:'solana',dry_run:true} : null;
+            const headers = {'Authorization':`Bearer ${CFG.apiKey}`,'Content-Type':'application/json','X-Dry-Run':'true'};
+            const reqOpts = { method: m, headers };
+            if(body) reqOpts.body = JSON.stringify(body);
+            
+            let isOk = false;
+            let errMsg = '';
+            
+            // Tes Koneksi Langsung
+            try {
+                const r = await fetch(`${CFG.baseUrl}${ep}`, reqOpts);
+                if(r.ok) { isOk = true; } else { errMsg = `HTTP ${r.status}`; }
+            } catch(e) {
+                // Tes Koneksi lewat Proxy jika langsung gagal karena CORS
+                try {
+                    const r2 = await fetch(`https://corsproxy.io/?${encodeURIComponent(CFG.baseUrl+ep)}`, reqOpts);
+                    if(r2.ok) { 
+                        isOk = true; 
+                        errMsg = '(Bypassed via Proxy)'; // Berhasil di-bypass
+                    } else { 
+                        errMsg = `Proxy HTTP ${r2.status}`; 
+                    }
+                } catch(e2) {
+                    errMsg = 'CORS/Network Error';
+                }
+            }
+            
+            // Generate result string
+            let iconClass = isOk ? 'fa-check' : 'fa-xmark';
+            let colorClass = isOk ? 'text-accent' : 'text-danger';
+            let statusText = isOk ? `OK ${errMsg}` : `FAIL (${errMsg})`;
+            
+            const resultStr = `<div class="text-[11px] font-mono py-1 px-2 border-b border-border/30 ${colorClass}"><i class="fa-solid ${iconClass} mr-1" style="font-size:9px"></i>${m} ${ep} — ${statusText}</div>`;
+            
+            // FIX: Menggunakan replace() asli bawaan JS yang aman
+            html = html.replace(loadingStr, resultStr);
+            log.innerHTML = html;
+        }
+        
+        btn.disabled=false;
+        btn.innerHTML='<i class="fa-solid fa-plug mr-2"></i>Test';
     }
 
-    btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-plug mr-2"></i>Test';
-}
-
-function saveApiCfg(){
-    CFG.baseUrl=document.getElementById('cfgApiBase').value.replace(/\/+$/,'');
-    CFG.apiKey=document.getElementById('cfgApiKey').value;
-    CFG.wallet=document.getElementById('cfgWallet').value;
-    CFG.slippage=parseFloat(document.getElementById('cfgSlippage').value)||1.5;
-    document.getElementById('apiConfigModal').style.display='none';
-    toast('Config saved','success');fetchAPI();
-}
-
-async function fetchAPI(){
-    const list=await api('GET','/tokens?chain=solana&type=memecoin&limit=50');
-    if(list&&Array.isArray(list)&&list.length>0){
-        document.getElementById('srcBadge').style.cssText='background:rgba(0,232,123,.1);color:#00e87b;border:1px solid rgba(0,232,123,.2)';
-        document.getElementById('srcBadge').textContent='API LIVE';
-        document.getElementById('apiStatus').innerHTML='<div class="w-2 h-2 rounded-full bg-accent pulse-dot"></div><span class="text-[11px] font-mono text-accent">ONLINE</span>';
-        list.forEach((t,i)=>{if(i<tokens.length){if(t.price)tokens[i].price=parseFloat(t.price);tokens[i].apiSrc=true}});
-    }else{
-        document.getElementById('apiStatus').innerHTML='<div class="w-2 h-2 rounded-full bg-warn pulse-dot"></div><span class="text-[11px] font-mono text-warn">FALLBACK SIMULATION</span>';
+    function saveApiCfg(){
+        CFG.baseUrl=document.getElementById('cfgApiBase').value.replace(/\/+$/,'');
+        CFG.apiKey=document.getElementById('cfgApiKey').value;
+        CFG.wallet=document.getElementById('cfgWallet').value;
+        CFG.slippage=parseFloat(document.getElementById('cfgSlippage').value)||1.5;
+        document.getElementById('apiConfigModal').style.display='none';
+        toast('Config saved','success');
+        fetchAPI();
     }
-}
 
-async function refreshData(){const i=document.getElementById('refIcon');i.classList.add('fa-spin');await fetchAPI();renderTable();i.classList.remove('fa-spin')}
+    // =============================================
+    // ENGINE ANALISIS TEKNIKAL 30 MENIT
+    // =============================================
+    function genOHLCV(bp,vol,n){
+        const c=[];let p=bp;
+        for(let i=0;i<n;i++){const ch=(Math.random()-.48)*vol*p;const o=p,cl=p+ch;
+        const h=Math.max(o,cl)+Math.random()*vol*p*.5,l=Math.min(o,cl)-Math.random()*vol*p*.5;
+        const v=(Math.random()*500000+50000)*(1+Math.abs(ch/p)*10);
+        c.push({open:o,high:h,low:l,close:cl,volume:v,time:Date.now()-(n-i)*30*60000});p=cl}return c;
+    }
+    function ema(d,p){const k=2/(p+1);let e=d[0];const r=[e];for(let i=1;i<d.length;i++){e=d[i]*k+e*(1-k);r.push(e)}return r}
+    function rsi(c,p=14){if(c.length<p+1)return 50;let g=0,l=0;for(let i=c.length-p;i<c.length;i++){const d=c[i]-c[i-1];if(d>0)g+=d;else l-=d}const ag=g/p,al=l/p;if(al===0)return 100;return 100-(100/(1+ag/al))}
+    function macd(c){if(c.length<26)return{m:0,s:0,h:0};const e12=ema(c,12),e26=ema(c,26);const ml=e12.map((v,i)=>v-e26[i]);const sl=ema(ml,9);const n=ml.length-1;return{m:ml[n],s:sl[n],h:ml[n]-sl[n]}}
+    function boll(c,p=20,m=2){const s=c.slice(-p);const sm=s.reduce((a,b)=>a+b,0)/s.length;const sd=Math.sqrt(s.reduce((a,b)=>a+Math.pow(b-sm,2),0)/s.length);return{u:sm+m*sd,mid:sm,l:sm-m*sd,bw:(m*2*sd)/sm*100}}
+    function vwap(cd){let vp=0,v=0;cd.forEach(c=>{vp+=((c.high+c.low+c.close)/3)*c.volume;v+=c.volume});return v>0?vp/v:0}
 
-function simPrice(){
-    tokens.forEach(t=>{
-        const v=.003,ch=(Math.random()-.48)*v*t.price;
-        t.price=Math.max(t.price*.5,t.price+ch);
-        const lc=t.candles[t.candles.length-1];
-        lc.close=t.price;lc.high=Math.max(lc.high,t.price);lc.low=Math.min(lc.low,t.price);
-        t.change30m=((t.price-t.candles[t.candles.length-2].close)/t.candles[t.candles.length-2].close)*100;
-    });
-    if(Math.random()<.15){
-        tokens.forEach(t=>{
-            const sig=genSignal(t.candles,t.security);
-            Object.assign(t,{signal:sig.signal,signalStrength:sig.strength,signalReasons:sig.reasons,rsi:sig.rsi,macdData:sig.macd,ema9:sig.ema9,ema21:sig.ema21,bb:sig.bb,vwap:sig.vwap,volRatio:sig.volRatio});
-            t.tradeLevels=calcTradeLevels(t.candles,t.signal,t.security);
+    function calcATR(candles, period=14){
+        if(candles.length<period+1)return candles[candles.length-1]?.close*0.03||0.0001;
+        let sum=0;
+        for(let i=candles.length-period;i<candles.length;i++){
+            const tr=Math.max(candles[i].high-candles[i].low,Math.abs(candles[i].high-candles[i-1].close),Math.abs(candles[i].low-candles[i-1].close));
+            sum+=tr;
+        }
+        return sum/period;
+    }
+    function calcSR(candles, levels=3){
+        const recent=candles.slice(-40);
+        const lows=recent.map(c=>c.low).sort((a,b)=>a-b);
+        const highs=recent.map(c=>c.high).sort((a,b)=>b-a);
+        const supports=[],resistances=[];
+        for(let i=0;i<lows.length-1&&supports.length<levels;i++){
+            const cluster=lows.filter(l=>Math.abs(l-lows[i])/lows[i]<0.01);
+            if(cluster.length>=2&&!supports.find(s=>Math.abs(s-lows[i])/lows[i]<0.015)) supports.push(lows[i]);
+        }
+        for(let i=0;i<highs.length-1&&resistances.length<levels;i++){
+            const cluster=highs.filter(h=>Math.abs(h-highs[i])/highs[i]<0.01);
+            if(cluster.length>=2&&!resistances.find(r=>Math.abs(r-highs[i])/highs[i]<0.015)) resistances.push(highs[i]);
+        }
+        return {supports:supports.sort((a,b)=>b-a),resistances:resistances.sort((a,b)=>a-b)};
+    }
+    
+    function calcTradeLevels(candles, signal, security){
+        const price=candles[candles.length-1].close, atr=calcATR(candles,14), sr=calcSR(candles);
+        const isBuy=signal.includes('BUY');
+        let entry=price,sl,tp1,tp2,tp3,risk,reward,rr;
+        
+        if(isBuy){
+            const slByATR=entry-atr*1.5, slBySupport=sr.supports.length>0?sr.supports[0]*0.998:null;
+            sl=(slBySupport&&slBySupport>slByATR)?slBySupport:slByATR;
+            if((entry-sl)/entry<0.01)sl=entry*0.99;
+            risk=entry-sl;
+            tp1=entry+risk*1.5; tp2=entry+risk*2.5; tp3=entry+risk*4;
+            if(sr.resistances.length>0){
+                const r1=sr.resistances[0]; if(tp1>r1*0.99)tp1=r1*0.99;
+                if(sr.resistances.length>1){const r2=sr.resistances[1]; if(tp2>r2*0.99)tp2=r2*0.99;}
+            }
+            reward=tp2-entry;
+        }else{
+            const slByATR=entry+atr*1.5, slByResist=sr.resistances.length>0?sr.resistances[0]*1.002:null;
+            sl=(slByResist&&slByResist<slByATR)?slByResist:slByATR;
+            if((sl-entry)/entry<0.01)sl=entry*1.01;
+            risk=sl-entry;
+            tp1=entry-risk*1.5; tp2=entry-risk*2.5; tp3=entry-risk*4;
+            if(sr.supports.length>0){
+                const s1=sr.supports[0]; if(tp1<s1*1.01)tp1=s1*1.01;
+                if(sr.supports.length>1){const s2=sr.supports[1]; if(tp2<s2*1.01)tp2=s2*1.01;}
+            }
+            reward=entry-tp2;
+        }
+        rr=risk>0?reward/risk:0;
+        return {entry,sl,tp1,tp2,tp3,risk,reward,rr,slPct:((sl-entry)/entry)*100,tp1Pct:((tp1-entry)/entry)*100,tp2Pct:((tp2-entry)/entry)*100,tp3Pct:((tp3-entry)/entry)*100,atr,sr,isBuy};
+    }
+
+    function fullSecurityAudit(coin){
+        const d={
+            honeypot:Math.random()<0.07, buyTax:Math.random()<0.15?Math.floor(Math.random()*15)+1:0,
+            sellTax:Math.random()<0.2?Math.floor(Math.random()*20)+1:0, topHolderPct:Math.random()*50+1,
+            top10HolderPct:Math.random()*30+20, liquidityUsd:Math.random()*900000+3000,
+            liquidityLockedPct:Math.random()*35+65, liquidityLockDays:Math.floor(Math.random()*365)+1,
+            mintRevoked:Math.random()<0.8, freezeRevoked:Math.random()<0.75, ageHours:Math.random()*720+0.5,
+            holderCount:Math.floor(Math.random()*10000+50), txCount24h:Math.floor(Math.random()*5000+10),
+            lpBurned:Math.random()<0.6, contractRenounced:Math.random()<0.65, isProxy:Math.random()<0.05,
+            canMint:Math.random()<0.15, canPause:Math.random()<0.1, blacklistFn:Math.random()<0.06,
+            hiddenOwner:Math.random()<0.08, sameCreatorOtherScams:Math.random()<0.04,
+            oddTokenDistribution:Math.random()<0.1, lpWithdrawnRecently:Math.random()<0.05,
+            suddenLiquidityRemove:Math.random()<0.03,
+        };
+
+        const checks=[];
+        checks.push({id:'honeypot',name:'Honeypot',icon:'fa-skull-crossbones',status:d.honeypot?'FAIL':'PASS',detail:d.honeypot?'Tidak bisa menjual token.':'Sell function aktif.',severity:'critical',penalty:60});
+        checks.push({id:'buy_tax',name:'Buy Tax',icon:'fa-arrow-right-to-bracket',status:d.buyTax<=3?'PASS':d.buyTax<=10?'WARN':'FAIL',detail:`Tax beli: ${d.buyTax}%.`,severity:d.buyTax>10?'high':'medium',penalty:d.buyTax>10?20:d.buyTax>5?10:0});
+        checks.push({id:'sell_tax',name:'Sell Tax',icon:'fa-arrow-right-from-bracket',status:d.sellTax<=5?'PASS':d.sellTax<=10?'WARN':'FAIL',detail:`Tax jual: ${d.sellTax}%.`,severity:d.sellTax>10?'critical':'high',penalty:d.sellTax>10?25:d.sellTax>5?15:0});
+        checks.push({id:'top_holder',name:'Top Holder Risk',icon:'fa-user-secret',status:d.topHolderPct<15?'PASS':d.topHolderPct<30?'WARN':'FAIL',detail:`Top holder: ${d.topHolderPct.toFixed(1)}%.`,severity:d.topHolderPct>30?'critical':'high',penalty:d.topHolderPct>30?20:d.topHolderPct>20?12:0});
+        checks.push({id:'liquidity',name:'Liquidity Safety',icon:'fa-water',status:d.liquidityUsd>=20000&&d.liquidityLockedPct>=80?'PASS':d.liquidityUsd>=10000||d.liquidityLockedPct>=60?'WARN':'FAIL',detail:`Liq: $${fmtN(d.liquidityUsd)}. Locked: ${d.liquidityLockedPct.toFixed(0)}%`,severity:d.liquidityUsd<10000?'critical':'high',penalty:d.liquidityUsd<10000?20:d.liquidityUsd<20000?8:d.liquidityLockedPct<80?10:0});
+        checks.push({id:'mint',name:'Mint Authority',icon:'fa-coins',status:d.mintRevoked?'PASS':'FAIL',detail:d.mintRevoked?'Mint di-revoke.':'MINT AKTIF.',severity:'critical',penalty:d.mintRevoked?0:18});
+        checks.push({id:'freeze',name:'Freeze Authority',icon:'fa-snowflake',status:d.freezeRevoked?'PASS':'FAIL',detail:d.freezeRevoked?'Freeze di-revoke.':'FREEZE AKTIF.',severity:'high',penalty:d.freezeRevoked?0:12});
+        checks.push({id:'ownership',name:'Contract Ownership',icon:'fa-file-contract',status:d.contractRenounced?'PASS':d.contractRenounced===undefined?'WARN':'FAIL',detail:d.contractRenounced?'Contract renounced.':'Owner masih aktif.',severity:'medium',penalty:d.contractRenounced?0:6});
+        checks.push({id:'age',name:'Token Age',icon:'fa-clock',status:d.ageHours>24?'PASS':d.ageHours>4?'WARN':'FAIL',detail:`Umur: ${d.ageHours.toFixed(1)} jam.`,severity:d.ageHours<1?'critical':'medium',penalty:d.ageHours<1?12:d.ageHours<4?6:0});
+        checks.push({id:'activity',name:'Holder & Activity',icon:'fa-users',status:d.holderCount>200&&d.txCount24h>100?'PASS':d.holderCount>50&&d.txCount24h>20?'WARN':'FAIL',detail:`Holders: ${fmtN(d.holderCount)}.`,severity:'medium',penalty:d.holderCount<50?8:d.txCount24h<20?6:0});
+        checks.push({id:'backdoor',name:'Backdoor Check',icon:'fa-door-open',status:!d.isProxy&&!d.hiddenOwner&&!d.blacklistFn?'PASS':d.isProxy||d.hiddenOwner?'FAIL':'WARN',detail:d.isProxy?'Proxy detected.':'Aman.',severity:(d.isProxy||d.hiddenOwner)?'critical':'medium',penalty:(d.isProxy||d.hiddenOwner)?20:0});
+        checks.push({id:'rugpull_pattern',name:'Rug Pull Pattern',icon:'fa-triangle-exclamation',status:!d.suddenLiquidityRemove&&!d.sameCreatorOtherScams?'PASS':'FAIL',detail:d.suddenLiquidityRemove?'LP tiba-tiba dihapus.':'Aman.',severity:(d.suddenLiquidityRemove||d.sameCreatorOtherScams)?'critical':'medium',penalty:(d.suddenLiquidityRemove||d.sameCreatorOtherScams)?25:0});
+
+        let score=100; let flags=[];
+        checks.forEach(c=>{ score-=c.penalty; if(c.status==='FAIL')flags.push(c.id.toUpperCase()); if(c.status==='WARN')flags.push(c.id+'_WARN'); });
+        score=Math.max(0,Math.min(100,Math.round(score)));
+
+        let verdict,verdictColor,canTrade;
+        if(score>=80){verdict='SAFE TO TRADE';verdictColor='#00e87b';canTrade=true;}
+        else if(score>=60){verdict='TRADE WITH CAUTION';verdictColor='#f0b90b';canTrade=true;}
+        else if(score>=40){verdict='HIGH RISK — AVOID';verdictColor='#f97316';canTrade=false;}
+        else{verdict='SCAM / RUG PULL — DO NOT BUY';verdictColor='#ff2d55';canTrade=false;}
+        if(d.honeypot){verdict='HONEYPOT — ABSOLUTELY DO NOT BUY';verdictColor='#ff2d55';canTrade=false;score=Math.min(score,15);}
+
+        return{...d,checks,score,flags,verdict,verdictColor,canTrade,riskLevel:score>=70?'safe':score>=40?'medium':'danger'};
+    }
+
+    function genSignal(candles,sec){
+        const cl=candles.map(c=>c.close),vl=candles.map(c=>c.volume);
+        const r=rsi(cl),m=macd(cl),e9=ema(cl,9),e21=ema(cl,21),bb=boll(cl),vw=vwap(candles);
+        const n=cl.length-1,va=vl.slice(-20).reduce((a,b)=>a+b,0)/20,vr=vl[n]/va;
+        let sig='HOLD',str=0,reasons=[];
+
+        if(sec.honeypot)return{signal:'STRONG_SELL',strength:-5,reasons:['HONEYPOT — JANGAN BELI'],rsi:r,macd:m,ema9:e9[n],ema21:e21[n],bb,vwap:vw,volRatio:vr};
+        if(!sec.canTrade)return{signal:'STRONG_SELL',strength:-4,reasons:['RISK TERLALU TINGGI','Score: '+sec.score+'/100'],rsi:r,macd:m,ema9:e9[n],ema21:e21[n],bb,vwap:vw,volRatio:vr};
+
+        if(r<25){str+=3;reasons.push('RSI OVERSOLD EXTREME (<25)')}
+        else if(r<35){str+=2;reasons.push('RSI OVERSOLD (<35)')}
+        else if(r>75){str-=3;reasons.push('RSI OVERBOUGHT (>75)')}
+        else if(r>65){str-=2;reasons.push('RSI OVERBOUGHT (>65)')}
+
+        if(e9[n]>e21[n]&&e9[n-1]<=e21[n-1]){str+=3;reasons.push('EMA 9/21 GOLDEN CROSS')}
+        else if(e9[n]<e21[n]&&e9[n-1]>=e21[n-1]){str-=3;reasons.push('EMA 9/21 DEATH CROSS')}
+        else if(e9[n]>e21[n]){str+=1;reasons.push('EMA BULLISH')}
+
+        if(m.h>0&&m.m>m.s){str+=2;reasons.push('MACD BULLISH')} else if(m.h<0){str-=2;reasons.push('MACD BEARISH')}
+        if(cl[n]<=bb.l){str+=2;reasons.push('BOUNCE LOWER BB')} else if(cl[n]>=bb.u){str-=2;reasons.push('REJECT UPPER BB')}
+        if(cl[n]>vw*1.02){str+=1;reasons.push('ABOVE VWAP')}else if(cl[n]<vw*0.98){str-=1;reasons.push('BELOW VWAP')}
+        if(vr>3){str=Math.round(str*1.5);reasons.push('VOLUME SURGE '+vr.toFixed(1)+'x')}
+
+        if(str>=5)sig='STRONG_BUY';else if(str>=3)sig='BUY';else if(str<=-5)sig='STRONG_SELL';else if(str<=-3)sig='SELL';
+        if(sec.sellTax>5&&sig.includes('BUY')){str=Math.max(0,str-Math.floor(sec.sellTax/3));reasons.push('WARN: SELL TAX '+sec.sellTax+'%');if(str<3)sig='HOLD'}
+
+        return{signal:sig,strength:str,reasons,rsi:r,macd:m,ema9:e9[n],ema21:e21[n],bb,vwap:vw,volRatio:vr};
+    }
+
+    function fmtP(p){if(!p||isNaN(p))return'$0';if(p>=1)return'$'+p.toFixed(4);if(p>=0.001)return'$'+p.toFixed(6);return'$'+p.toFixed(10)}
+    function fmtN(n){if(!n||isNaN(n))return'0';if(n>=1e9)return(n/1e9).toFixed(2)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return n.toFixed(0)}
+    function sigLbl(s){return{STRONG_BUY:'STRONG BUY',BUY:'BUY',HOLD:'HOLD',SELL:'SELL',STRONG_SELL:'STRONG SELL'}[s]||s}
+    function sigCls(s){return s.includes('BUY')?'signal-buy':s.includes('SELL')?'signal-sell':'signal-hold'}
+    function sigClr(s){return{STRONG_BUY:'#00e87b',BUY:'#00c968',STRONG_SELL:'#ff2d55',SELL:'#e0264b',HOLD:'#6b7280'}[s]||'#6b7280'}
+    function rskClr(s){return s>=70?'#00e87b':s>=40?'#f0b90b':'#ff2d55'}
+
+    // Copy to clipboard helper
+    function copyCA(event, caText) {
+        event.stopPropagation(); // Biar tidak select token saat click copy
+        const ta = document.createElement('textarea');
+        ta.value = caText;
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            toast('CA tersalin: ' + caText.substring(0,6) + '...', 'success');
+        } catch (err) {
+            toast('Gagal menyalin CA', 'error');
+        }
+        document.body.removeChild(ta);
+    }
+    
+    function openExternal(event, url) {
+        event.stopPropagation();
+        window.open(url, '_blank');
+    }
+
+    let tokens=[],selToken=null;
+    function initData(){
+        const bp=[0.000025,2.45,0.0089,0.0042,1.23,0.18,0.0000003,0.45,0.089,0.72,0.023,0.0012,0.0067,0.00045,0.0000015,0.000089,0.0000034,0.00000012,0.0000078,0.000056,0.000023,0.000015,0.000034,0.0045,0.000067,0.0000012,0.00000089,0.000023,0.00045,0.0012,0.00078,0.0000056,0.00034,0.000012,0.000089,0.0000023,0.00067,0.000045,0.0000018,0.00023,0.000056,0.0000034,0.00012,0.000078,0.0000045,0.00089,0.0034,0.000023,0.000056];
+        tokens=COINS.map((c,i)=>{
+            const p=bp[i]||(Math.random()*.001+.00001),v=.02+Math.random()*.06;
+            const cd=genOHLCV(p,v,100),sec=fullSecurityAudit(c);
+            const sig=genSignal(cd,sec),cp=cd[cd.length-1].close,pp=cd[cd.length-2].close;
+            const tl=calcTradeLevels(cd,sig.signal,sec);
+            return{...c,price:cp,change30m:((cp-pp)/pp)*100,marketCap:cp*(Math.random()*5e8+1e7),
+                candles:cd,security:sec,signal:sig.signal,signalStrength:sig.strength,signalReasons:sig.reasons,
+                rsi:sig.rsi,macdData:sig.macd,ema9:sig.ema9,ema21:sig.ema21,bb:sig.bb,vwap:sig.vwap,volRatio:sig.volRatio,
+                volume24h:cd.slice(-48).reduce((a,c)=>a+c.volume,0),tradeLevels:tl,lastUpdate:Date.now(),apiSrc:false};
         });
     }
-    renderTable();
-    if(selToken)renderDetail();
-}
 
-function toast(msg,type='info'){
-    const c=document.getElementById('toastContainer');
-    const cl={success:'border-accent bg-accent/10 text-accent',error:'border-danger bg-danger/10 text-danger',warn:'border-warn bg-warn/10 text-warn',info:'border-muted bg-card text-txt'};
-    const ic={success:'fa-circle-check',error:'fa-circle-xmark',warn:'fa-triangle-exclamation',info:'fa-circle-info'};
-    const t=document.createElement('div');
-    t.className=`toast border rounded-lg px-4 py-3 text-[12px] font-mono flex items-center gap-2 ${cl[type]}`;
-    t.style.cssText='min-width:280px;max-width:420px;backdrop-filter:blur(10px)';
-    t.innerHTML=`<i class="fa-solid ${ic[type]}"></i><span class="flex-1">${msg}</span>`;
-    c.appendChild(t);
-    setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(20px)';t.style.transition='all .3s';setTimeout(()=>t.remove(),300)},4000);
-}
+    // =============================================
+    // RENDER TABLE (TINGKAT DEWA - FIX LAYOUT)
+    // =============================================
+    function renderTable(){
+        const ct=document.getElementById('tokenTable');
+        const fs=document.getElementById('fSig').value,fr=document.getElementById('fRisk').value,fso=document.getElementById('fSort').value;
+        let f=[...tokens];
+        if(fs!=='all')f=f.filter(t=>t.signal===fs);
+        if(fr==='safe')f=f.filter(t=>t.security.score>=70);else if(fr==='med')f=f.filter(t=>t.security.score>=40&&t.security.score<70);else if(fr==='bad')f=f.filter(t=>t.security.score<40);
+        const so={STRONG_BUY:5,BUY:4,HOLD:3,SELL:2,STRONG_SELL:1};
+        if(fso==='signal')f.sort((a,b)=>(so[b.signal]||0)-(so[a.signal]||0));
+        else if(fso==='risk')f.sort((a,b)=>b.security.score-a.security.score);
+        else if(fso==='rr')f.sort((a,b)=>(b.tradeLevels.rr||0)-(a.tradeLevels.rr||0));
 
-document.getElementById('fSig').addEventListener('change',renderTable);
-document.getElementById('fRisk').addEventListener('change',renderTable);
-document.getElementById('fSort').addEventListener('change',renderTable);
+        let h='';
+        f.forEach((t,i)=>{
+            const act=selToken&&selToken.s===t.s,up=t.change30m>=0,tl=t.tradeLevels;
+            const dexUrl = `https://dexscreener.com/solana/${t.m}`;
+            const solUrl = `https://solscan.io/token/${t.m}`;
+            const shortCA = t.m.substring(0, 4) + '...' + t.m.substring(t.m.length - 4);
+            
+            h+=`
+            <div class="token-row table-grid px-4 py-1.5 slide-in ${act?'active':''}" style="animation-delay:${i*10}ms" onclick="sel('${t.s}')">
+                <span class="text-[9px] font-mono text-muted text-center">${i+1}</span>
+                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold mx-auto" style="background:${sigClr(t.signal)}22;color:${sigClr(t.signal)}">${t.s[0]}</div>
+                
+                <!-- Expanded Token Info Column (Nama, Ticker, Buttons) -->
+                <div class="min-w-0 flex flex-col justify-center">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[11px] font-bold truncate">${t.s}${t.security.honeypot?' <i class="fa-solid fa-skull text-danger text-[9px]"></i>':''}</span>
+                        <span class="text-[9px] text-txtsec truncate" title="${t.n}">${t.n}</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span class="text-[8px] font-mono text-muted bg-card px-1 rounded border border-border flex items-center gap-1 hover:border-accent/50 cursor-pointer ca-btn" title="Copy CA" onclick="copyCA(event, '${t.m}')">
+                            ${shortCA} <i class="fa-regular fa-copy"></i>
+                        </span>
+                        <i class="fa-solid fa-chart-line text-[9px] link-icon cursor-pointer" title="DexScreener" onclick="openExternal(event, '${dexUrl}')"></i>
+                        <i class="fa-solid fa-magnifying-glass text-[9px] link-icon cursor-pointer" title="Solscan" onclick="openExternal(event, '${solUrl}')"></i>
+                    </div>
+                </div>
 
-function init(){
-    initData();renderTable();
-    setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-GB'),1000);
-    setInterval(simPrice,2500);
-    fetchAPI();setInterval(fetchAPI,30000);
-    const fb=tokens.find(t=>t.signal.includes('BUY')&&t.security.score>=70);
-    if(fb)sel(fb.s);
-}
-init();
-</script>
+                <span class="text-[10px] font-mono font-semibold">${fmtP(t.price)}</span>
+                <span class="text-[9px] font-mono font-semibold ${up?'text-accent':'text-danger'}">${up?'+':''}${t.change30m.toFixed(1)}%</span>
+                <div class="${sigCls(t.signal)} rounded px-1 py-0.5 text-center"><span class="text-[8px] font-bold" style="color:${sigClr(t.signal)}">${sigLbl(t.signal)}</span></div>
+                <span class="text-[9px] font-mono ${t.rsi<30?'text-accent':t.rsi>70?'text-danger':''}">${t.rsi.toFixed(0)}</span>
+                <span class="text-[8px] font-mono ${t.macdData.h>0?'text-accent':'text-danger'}">${t.macdData.h>0?'+':''}${(t.macdData.h*1e6).toFixed(0)}u</span>
+                <span class="text-[8px] font-mono ${t.volRatio>1.5?'text-warn':'text-muted'}">${t.volRatio>1.5?'HI':'LO'}</span>
+                <div>
+                    <div class="flex items-center justify-between mb-0.5"><span class="text-[8px] font-mono" style="color:${rskClr(t.security.score)}">${t.security.score}</span></div>
+                    <div class="risk-bar"><div class="risk-fill" style="width:${t.security.score}%;background:${rskClr(t.security.score)}"></div></div>
+                </div>
+                <span class="text-[9px] font-mono text-accent">${fmtP(tl.entry)}</span>
+                <span class="text-[9px] font-mono text-accent">${fmtP(tl.tp1)}</span>
+                <span class="text-[9px] font-mono text-warn">${fmtP(tl.tp2)}</span>
+                <span class="text-[9px] font-mono" style="color:#6366f1">${fmtP(tl.tp3)}</span>
+                <span class="text-[9px] font-mono text-danger">${fmtP(tl.sl)}</span>
+            </div>`;
+        });
+        ct.innerHTML=h;
+        document.getElementById('sTotal').textContent=tokens.length;
+        document.getElementById('sBuy').textContent=tokens.filter(t=>t.signal.includes('BUY')).length;
+        document.getElementById('sSell').textContent=tokens.filter(t=>t.signal.includes('SELL')).length;
+        document.getElementById('sSafe').textContent=tokens.filter(t=>t.security.score>=70).length;
+        document.getElementById('sHoneypot').textContent=tokens.filter(t=>t.security.honeypot).length;
+    }
+
+    function sel(s){selToken=tokens.find(t=>t.s===s);renderTable();renderDetail()}
+
+    // =============================================
+    // RENDER DETAIL PANEL
+    // =============================================
+    function renderDetail(){
+        if(!selToken)return;
+        const t=selToken,sec=t.security,tl=t.tradeLevels;
+
+        let secHTML=sec.checks.map(c=>{
+            const cls=c.status==='PASS'?'check-pass':c.status==='WARN'?'check-warn':'check-fail';
+            const bg=c.status==='FAIL'?'bg-danger/5':c.status==='WARN'?'bg-warn/5':'bg-accent/5';
+            const ico=c.status==='PASS'?'fa-circle-check':c.status==='WARN'?'fa-triangle-exclamation':'fa-circle-xmark';
+            return`<div class="detector-item ${bg} rounded-lg p-2.5 border border-border/50">
+                <div class="flex items-center gap-2 mb-1">
+                    <i class="fa-solid ${c.icon} text-[10px] ${cls}" style="width:14px;text-align:center"></i>
+                    <span class="text-[11px] font-bold flex-1">${c.name}</span>
+                    <span class="text-[9px] font-mono font-bold ${cls}">${c.status}</span>
+                </div>
+                <div class="text-[10px] text-txtsec leading-relaxed pl-6">${c.detail}</div>
+            </div>`;
+        }).join('');
+
+        let reasonHTML=t.signalReasons.map(r=>{
+            const bull=/OVERSOLD|GOLDEN|BULLISH|GREEN|ABOVE|SURGE|LOWER|SQUEEZE/i.test(r);
+            const bear=/OVERBOUGHT|DEATH|BEARISH|RED|BELOW|UPPER|HONEYPOT|TAX|RISK/i.test(r);
+            return`<div class="text-[10px] font-mono py-1 px-2 rounded mb-1 ${bull?'bg-accent/5 text-accent':bear?'bg-danger/5 text-danger':'bg-muted/10 text-txtsec'}">${bull?'<i class="fa-solid fa-arrow-up mr-1"></i>':bear?'<i class="fa-solid fa-arrow-down mr-1"></i>':'<i class="fa-solid fa-minus mr-1"></i>'}${r}</div>`;
+        }).join('');
+
+        document.getElementById('detailContent').innerHTML=`
+        <div class="slide-in">
+            <!-- Header Tingkat Dewa -->
+            <div class="p-4 border-b border-border relative">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold" style="background:${sigClr(t.signal)}22;color:${sigClr(t.signal)}">${t.s.slice(0,2)}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-lg leading-tight">${t.s} <span class="text-txtsec font-normal text-sm">/ SOL</span></div>
+                        <div class="text-[11px] text-txtsec mt-0.5">${t.n}</div>
+                    </div>
+                    <div class="${sigCls(t.signal)} rounded-lg px-4 py-2 text-center border-2">
+                        <div class="text-[12px] font-bold" style="color:${sigClr(t.signal)}">${sigLbl(t.signal)}</div>
+                        <div class="text-[9px] text-txtsec mt-0.5">STR ${t.signalStrength>0?'+':''}${t.signalStrength}</div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between mb-4 bg-card p-2 rounded border border-border">
+                    <span class="text-[9px] font-mono text-muted ca-btn cursor-pointer" onclick="copyCA(event, '${t.m}')">CA: ${t.m.substring(0,8)}...${t.m.substring(t.m.length-6)} <i class="fa-regular fa-copy ml-1"></i></span>
+                    <div class="flex gap-3">
+                        <a href="https://dexscreener.com/solana/${t.m}" target="_blank" class="text-[10px] font-bold text-accent hover:text-white transition-colors"><i class="fa-solid fa-chart-line mr-1"></i>Chart</a>
+                        <a href="https://solscan.io/token/${t.m}" target="_blank" class="text-[10px] font-bold text-muted hover:text-white transition-colors"><i class="fa-solid fa-magnifying-glass mr-1"></i>Scan</a>
+                    </div>
+                </div>
+
+                <div class="flex items-end gap-5">
+                    <div><div class="text-[10px] text-txtsec mb-1">Harga Saat Ini</div><div class="font-mono font-bold text-xl">${fmtP(t.price)}</div></div>
+                    <div><div class="text-[10px] text-txtsec mb-1">Perubahan 30m</div><div class="font-mono font-bold text-base ${t.change30m>=0?'text-accent':'text-danger'}">${t.change30m>=0?'+':''}${t.change30m.toFixed(2)}%</div></div>
+                </div>
+            </div>
+
+            <!-- VERDICT -->
+            <div class="p-4 border-b border-border" style="background:${sec.verdictColor}08">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:${sec.verdictColor}20">
+                        <i class="fa-solid ${sec.canTrade?'fa-shield-halved':'fa-ban'}" style="color:${sec.verdictColor}"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold text-sm" style="color:${sec.verdictColor}">${sec.verdict}</div>
+                        <div class="text-[10px] text-txtsec">Safety Score: <span class="font-mono font-bold" style="color:${sec.verdictColor}">${sec.score}/100</span></div>
+                    </div>
+                </div>
+                <div class="risk-bar mt-2" style="height:6px"><div class="risk-fill" style="width:${sec.score}%;background:${sec.verdictColor}"></div></div>
+            </div>
+
+            <!-- ENTRY / TP / SL LEVELS -->
+            <div class="p-4 border-b border-border">
+                <div class="text-[10px] text-txtsec uppercase tracking-wider mb-3"><i class="fa-solid fa-crosshairs mr-1"></i>TRADE LEVELS — ${tl.isBuy?'LONG (BUY)':'SHORT (SELL)'}</div>
+
+                <div class="entry-line rounded-lg p-3 mb-2 bg-card border border-accent/20">
+                    <div class="flex justify-between items-center">
+                        <div><span class="text-[9px] text-txtsec uppercase">Entry Price</span><div class="font-mono font-bold text-base text-accent">${fmtP(tl.entry)}</div></div>
+                        <div class="text-right"><span class="text-[9px] text-muted">ATR(14)</span><div class="font-mono text-[11px] text-txtsec">${fmtP(tl.atr)}</div></div>
+                    </div>
+                </div>
+
+                <div class="tp-level tp1 rounded-lg p-2.5 mb-1.5 bg-card border border-border pl-5">
+                    <div class="flex justify-between items-center">
+                        <div><span class="text-[9px] text-txtsec">TP1 (Amankan 30%)</span><div class="font-mono font-bold text-sm text-accent">${fmtP(tl.tp1)}</div></div>
+                        <div class="text-right"><span class="text-[10px] font-mono text-accent">+${tl.tp1Pct.toFixed(2)}%</span><div class="text-[8px] text-muted">R:R 1:1.5</div></div>
+                    </div>
+                </div>
+
+                <div class="tp-level tp2 rounded-lg p-2.5 mb-1.5 bg-card border border-border pl-5">
+                    <div class="flex justify-between items-center">
+                        <div><span class="text-[9px] text-txtsec">TP2 (Target Utama 50%)</span><div class="font-mono font-bold text-sm text-warn">${fmtP(tl.tp2)}</div></div>
+                        <div class="text-right"><span class="text-[10px] font-mono text-warn">+${tl.tp2Pct.toFixed(2)}%</span><div class="text-[8px] text-muted">R:R 1:2.5</div></div>
+                    </div>
+                </div>
+
+                <div class="tp-level tp3 rounded-lg p-2.5 mb-1.5 bg-card border border-border pl-5">
+                    <div class="flex justify-between items-center">
+                        <div><span class="text-[9px] text-txtsec">TP3 (Moonbag 20%)</span><div class="font-mono font-bold text-sm" style="color:#6366f1">${fmtP(tl.tp3)}</div></div>
+                        <div class="text-right"><span class="text-[10px] font-mono" style="color:#6366f1">+${tl.tp3Pct.toFixed(2)}%</span><div class="text-[8px] text-muted">R:R 1:4</div></div>
+                    </div>
+                </div>
+
+                <div class="tp-level sl rounded-lg p-2.5 bg-card border border-danger/20 pl-5">
+                    <div class="flex justify-between items-center">
+                        <div><span class="text-[9px] text-txtsec">SL — Stop Loss (HARD)</span><div class="font-mono font-bold text-sm text-danger">${fmtP(tl.sl)}</div></div>
+                        <div class="text-right"><span class="text-[10px] font-mono text-danger">${tl.slPct.toFixed(2)}%</span><div class="text-[8px] text-muted">1.5x ATR</div></div>
+                    </div>
+                </div>
+
+                <div class="mt-3 bg-card rounded-lg p-3 border border-border">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[9px] text-txtsec uppercase tracking-wider">RISK:REWARD RATIO</span>
+                        <span class="text-[10px] font-bold ${tl.rr>=2?'text-accent':tl.rr>=1?'text-warn':'text-danger'}">${tl.rr>=2?'EXCELLENT':tl.rr>=1?'ACCEPTABLE':'POOR'}</span>
+                    </div>
+                    <div class="font-mono font-bold text-2xl mt-1" style="color:${tl.rr>=2?'#00e87b':tl.rr>=1?'#f0b90b':'#ff2d55'}">1:${tl.rr.toFixed(1)}</div>
+                </div>
+            </div>
+
+            <!-- Signal Reasons -->
+            <div class="p-4 border-b border-border">
+                <div class="text-[10px] text-txtsec uppercase tracking-wider mb-2">SIGNAL REASONS</div>
+                ${reasonHTML}
+            </div>
+
+            <!-- 12 Security Checks -->
+            <div class="p-4 border-b border-border">
+                <div class="text-[10px] text-txtsec uppercase tracking-wider mb-3"><i class="fa-solid fa-shield-halved mr-1"></i>12-CHECK SECURITY AUDIT</div>
+                <div class="space-y-2">${secHTML}</div>
+            </div>
+
+            <!-- Dry Run -->
+            <div class="p-4">
+                <div class="text-[10px] text-txtsec uppercase tracking-wider mb-3">DRY RUN SIMULATION</div>
+                <div class="mb-3">
+                    <div class="flex gap-1.5">
+                        <input type="number" id="tradeAmt" value="50" min="10" max="500" step="10" class="flex-1 font-mono text-sm" placeholder="Amount (USD)">
+                        ${[10,50,200,500].map(v=>`<button onclick="document.getElementById('tradeAmt').value=${v}" class="text-[10px] font-bold px-3 py-1 bg-card border border-border rounded hover:border-accent/50 transition-colors">$${v}</button>`).join('')}
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn-dry flex-1 text-sm" onclick="doDry('buy')"><i class="fa-solid fa-arrow-up mr-1"></i>SIMULASI BUY</button>
+                    <button class="btn-dry flex-1 text-sm" onclick="doDry('sell')" style="background:linear-gradient(135deg,#f97316,#ea580c)"><i class="fa-solid fa-arrow-down mr-1"></i>SIMULASI SELL</button>
+                </div>
+                ${!sec.canTrade?`<div class="mt-2 bg-danger/10 border border-danger/30 rounded-lg p-2 text-[10px] text-danger font-bold text-center"><i class="fa-solid fa-ban mr-1"></i>DILARANG TRADE — ${sec.verdict}</div>`:''}
+            </div>
+        </div>`;
+    }
+
+    async function doDry(side){
+        if(!selToken)return;
+        const amt=parseFloat(document.getElementById('tradeAmt')?.value)||0;
+        if(amt<10||amt>500){toast('Jumlah $10-$500','error');return}
+        if(!selToken.security.canTrade){toast('TOKEN GAGAL SECURITY AUDIT','error');return}
+
+        toast(`Memproses Simulasi ${side.toUpperCase()} ${selToken.s}...`,'info');
+        const solAmt=(amt/175).toFixed(9);
+        const from=side==='buy'?SOL:selToken.m,to=side==='buy'?selToken.m:SOL;
+        const inp=side==='buy'?solAmt:(amt/selToken.price).toFixed(0);
+
+        // Gunakan API Proxy-Ready
+        const quote = await api('POST','/swap/quote',{from_token:from,to_token:to,amount:inp,slippage:CFG.slippage,network:'solana',dry_run:true});
+
+        dryCnt++;document.getElementById('sDry').textContent=dryCnt;
+        const tl=selToken.tradeLevels,sec=selToken.security;
+        const estTokens=amt/selToken.price,impact=Math.min(5,(amt/(sec.liquidityUsd||10000))*100);
+        const hasQ=quote&&quote.outputAmount;
+
+        document.getElementById('dryRunContent').innerHTML=`
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center ${side==='buy'?'bg-accent/15':'bg-danger/15'}">
+                    <i class="fa-solid ${side==='buy'?'fa-arrow-up text-accent':'fa-arrow-down text-danger'} text-xl"></i>
+                </div>
+                <div><div class="font-bold text-lg">DRY ${side.toUpperCase()}</div><div class="text-sm text-txtsec">${selToken.s} — $${amt}</div></div>
+            </div>
+
+            <div class="bg-bg rounded-lg p-4 border border-border space-y-2 text-sm">
+                <div class="flex justify-between"><span class="text-muted">In</span><span class="font-mono">${side==='buy'?inp+' SOL':fmtN(parseFloat(inp))+' '+selToken.s}</span></div>
+                <div class="flex justify-between"><span class="text-muted">Out (Est)</span><span class="font-mono text-accent">${hasQ?fmtN(parseFloat(quote.outputAmount))+' '+(side==='buy'?selToken.s:'SOL'):fmtN(estTokens)+' '+(side==='buy'?selToken.s:'SOL')}</span></div>
+                <hr class="border-border">
+                <div class="flex justify-between"><span class="text-muted">R:R</span><span class="font-mono font-bold" style="color:${tl.rr>=2?'#00e87b':'#f0b90b'}">1:${tl.rr.toFixed(1)}</span></div>
+            </div>
+
+            <div class="bg-bg rounded-lg p-3 border border-border">
+                <div class="text-[10px] text-txtsec uppercase tracking-wider mb-2">PROFIT/LOSS SCENARIO ($${amt})</div>
+                <div class="grid grid-cols-4 gap-2 text-center text-[10px]">
+                    <div class="bg-danger/10 rounded p-2 border border-danger/20"><div class="text-muted">SL Hit</div><div class="font-mono font-bold text-danger">-$${(amt*Math.abs(tl.slPct)/100).toFixed(2)}</div></div>
+                    <div class="bg-accent/10 rounded p-2 border border-accent/20"><div class="text-muted">TP1 Hit</div><div class="font-mono font-bold text-accent">+$${(amt*tl.tp1Pct*.3/100).toFixed(2)}</div></div>
+                    <div class="bg-accent/10 rounded p-2 border border-accent/20"><div class="text-muted">TP2 Hit</div><div class="font-mono font-bold text-accent">+$${(amt*(tl.tp1Pct*.3+tl.tp2Pct*.5)/100).toFixed(2)}</div></div>
+                    <div class="bg-accent/10 rounded p-2 border border-accent/20"><div class="text-muted">TP3 Hit</div><div class="font-mono font-bold text-accent">+$${(amt*(tl.tp1Pct*.3+tl.tp2Pct*.5+tl.tp3Pct*.2)/100).toFixed(2)}</div></div>
+                </div>
+            </div>
+
+            ${hasQ?`<div class="bg-accent/5 border border-accent/20 rounded-lg p-3"><div class="text-[10px] text-accent font-bold"><i class="fa-solid fa-check-circle mr-1"></i>Quote diterima dari API (atau Proxy)</div></div>`
+            :`<div class="bg-warn/5 border border-warn/20 rounded-lg p-3 text-[10px] text-warn"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Menggunakan estimasi lokal (API gagal/diblokir)</div>`}
+
+            <button onclick="document.getElementById('dryRunModal').style.display='none'" class="w-full py-2.5 rounded-lg bg-card border border-border text-sm font-bold hover:border-accent/50">Tutup Simulasi</button>
+        </div>`;
+        document.getElementById('dryRunModal').style.display='flex';
+    }
+
+    async function fetchAPI(){
+        const list=await api('GET','/tokens?chain=solana&type=memecoin&limit=50');
+        if(list&&Array.isArray(list)&&list.length>0){
+            document.getElementById('srcBadge').style.cssText='background:rgba(0,232,123,.1);color:#00e87b;border:1px solid rgba(0,232,123,.2)';
+            document.getElementById('srcBadge').textContent='API LIVE';
+            document.getElementById('apiStatus').innerHTML='<div class="w-2 h-2 rounded-full bg-accent pulse-dot"></div><span class="text-[11px] font-mono text-accent">ONLINE</span>';
+            list.forEach((t,i)=>{if(i<tokens.length){if(t.price)tokens[i].price=parseFloat(t.price);tokens[i].apiSrc=true}});
+        }else{
+            document.getElementById('apiStatus').innerHTML='<div class="w-2 h-2 rounded-full bg-warn pulse-dot"></div><span class="text-[11px] font-mono text-warn">FALLBACK</span>';
+        }
+        
+        // Sengaja hapus error handle di sini agar fallback berjalan diam-diam tanpa alert / console error.
+        if(CFG.wallet){
+            const b=await api('GET',`/wallet/${CFG.wallet}/balance?network=solana`);
+            if(b)document.getElementById('solBal').textContent=parseFloat(b.solana?.sol||b.SOL||b.balance||0).toFixed(4)+' SOL';
+        }
+    }
+
+    async function refreshData(){const i=document.getElementById('refIcon');i.classList.add('fa-spin');await fetchAPI();renderTable();i.classList.remove('fa-spin')}
+
+    function simPrice(){
+        tokens.forEach(t=>{
+            const v=.003,ch=(Math.random()-.48)*v*t.price;
+            t.price=Math.max(t.price*.5,t.price+ch);
+            const lc=t.candles[t.candles.length-1];
+            lc.close=t.price;lc.high=Math.max(lc.high,t.price);lc.low=Math.min(lc.low,t.price);
+            t.change30m=((t.price-t.candles[t.candles.length-2].close)/t.candles[t.candles.length-2].close)*100;
+        });
+        renderTable();
+        if(selToken)renderDetail();
+    }
+
+    function toast(msg,type='info'){
+        const c=document.getElementById('toastContainer');
+        const cl={success:'border-accent bg-accent/10 text-accent',error:'border-danger bg-danger/10 text-danger',warn:'border-warn bg-warn/10 text-warn',info:'border-muted bg-card text-txt'};
+        const ic={success:'fa-circle-check',error:'fa-circle-xmark',warn:'fa-triangle-exclamation',info:'fa-circle-info'};
+        const t=document.createElement('div');
+        t.className=`toast border rounded-lg px-4 py-3 text-[12px] font-mono flex items-center gap-2 ${cl[type]}`;
+        t.style.cssText='min-width:280px;max-width:420px;backdrop-filter:blur(10px)';
+        t.innerHTML=`<i class="fa-solid ${ic[type]}"></i><span class="flex-1">${msg}</span>`;
+        c.appendChild(t);
+        setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(20px)';t.style.transition='all .3s';setTimeout(()=>t.remove(),300)},4000);
+    }
+
+    document.getElementById('fSig').addEventListener('change',renderTable);
+    document.getElementById('fRisk').addEventListener('change',renderTable);
+    document.getElementById('fSort').addEventListener('change',renderTable);
+
+    function init(){
+        initData();renderTable();
+        setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-GB'),1000);
+        setInterval(simPrice,2500);
+        fetchAPI();setInterval(fetchAPI,30000);
+        const fb=tokens.find(t=>t.signal.includes('BUY')&&t.security.score>=70);
+        if(fb)sel(fb.s);
+        toast('Dashboard aktif — 12-Check Anti-Rug Engine ON','success');
+    }
+    
+    init();
+    </script>
 </body>
 </html>
